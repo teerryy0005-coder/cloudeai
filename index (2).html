@@ -203,6 +203,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
         <th>Qabul%</th>
         <th>Yetkazilgan ✏️</th>
         <th>Yetib bormagan ✏️</th>
+        <th>Yo'lda 🚚</th>
         <th>Sotuv%</th>
         <th>Lid $</th>
         <th>Komissiya</th>
@@ -212,7 +213,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
         <th title="Taxminiy yetib borish foizini kiriting">Taxmin%</th>
         <th>Taxminiy foyda</th>
       </tr></thead>
-      <tbody id="u-body"><tr><td colspan="16" class="empty"><div class="empty-icon">📊</div><br>Ma'lumot yo'q</td></tr></tbody>
+      <tbody id="u-body"><tr><td colspan="17" class="empty"><div class="empty-icon">📊</div><br>Ma'lumot yo'q</td></tr></tbody>
       <tfoot id="u-foot"></tfoot>
     </table>
   </div>
@@ -652,6 +653,9 @@ function renderUmumiy() {
     var txDar = txYet * p.kom;
     var txFoy = txDar - xS;
 
+    // YO'LDA = Qabul - Yetkazilgan - Yetib bormagan
+    var yolda = p.qab - yet_v - qay_v;
+
     tX += p.xar; tL += p.lid; tSif += p.sif; tQab += p.qab;
     tY += yet_v; tQay += qay_v; tD += darom; tF += foyda; tTaxmin += txFoy;
 
@@ -666,6 +670,7 @@ function renderUmumiy() {
         ' <button class="izmenit-btn" onclick="openIzmenit(event,' + p.id + ',\'yet\')">✏</button></td>' +
       '<td class="mono c-muted" style="white-space:nowrap">' + qay_v +
         ' <button class="izmenit-btn" onclick="openIzmenit(event,' + p.id + ',\'qay\')">✏</button></td>' +
+      '<td class="mono c-blue">' + yolda + '</td>' +
       '<td><span class="badge ' + sfClass(sf) + '">' + fP(sf) + '</span></td>' +
       '<td class="mono c-yellow">' + f$(ln) + '</td>' +
       '<td class="mono c-blue">' + fS(p.kom) + '</td>' +
@@ -678,7 +683,7 @@ function renderUmumiy() {
   });
 
   document.getElementById('u-body').innerHTML = rows.length ? rows.join('') :
-    '<tr><td colspan="16" class="empty"><div class="empty-icon">📊</div><br>Hali ma\'lumot yo\'q</td></tr>';
+    '<tr><td colspan="17" class="empty"><div class="empty-icon">📊</div><br>Hali ma\'lumot yo\'q</td></tr>';
 
   var tFnet   = tF - qoshXar;
   var tTxNet  = tTaxmin - qoshXar;
@@ -699,6 +704,7 @@ function renderUmumiy() {
     '<td></td>' +
     '<td></td>' +
     '<td></td>' +
+    '<td></td>' +
     '<td class="mono c-green bold">' + fS(tD) + '</td>' +
     '<td class="mono bold ' + tFc + '">' + (tFnet>=0?'+':'') + fS(tFnet) + '</td>' +
     '<td><span class="badge ' + roiClass(tRoi) + '">' + fP(tRoi) + '</span></td>' +
@@ -707,7 +713,7 @@ function renderUmumiy() {
     '</tr>' +
     '<tr class="taxmin-row">' +
     '<td class="bold c-teal" style="font-size:.75rem">TAXMINIY</td>' +
-    '<td colspan="12" style="font-size:.75rem;color:var(--muted2)">Har mahsulot taxmin foiziga asosan hisoblangan</td>' +
+    '<td colspan="13" style="font-size:.75rem;color:var(--muted2)">Har mahsulot taxmin foiziga asosan hisoblangan</td>' +
     '<td></td><td></td>' +
     '<td class="mono bold ' + tTxc + '" style="font-size:.88rem">' + (tTxNet>=0?'+':'') + fS(tTxNet) + '</td>' +
     '</tr>' : '';
@@ -717,6 +723,8 @@ function renderUmumiy() {
 }
 
 function renderCards(tX, tL, tSif, tQab, tY, tQay, tFnet, tTxNet, tRoi, qoshXar) {
+  var tYolda = tQab - tY - tQay; // Yo'lda = Qabul - Yetkazilgan - Yetib bormagan
+  
   var html =
     '<div class="card"><div class="card-accent" style="background:var(--gold)"></div>' +
     '<div class="card-label">Jami xarajat</div>' +
@@ -748,6 +756,12 @@ function renderCards(tX, tL, tSif, tQab, tY, tQay, tFnet, tTxNet, tRoi, qoshXar)
     '<div class="card-label">Yetib bormagan</div>' +
     '<div class="card-val c-red">' + tQay + '</div>' +
     '<div class="card-sub">qaytgan</div></div>' +
+    
+    '<div class="card" style="border-color:rgba(37,99,235,.25)">' +
+    '<div class="card-accent" style="background:var(--blue)"></div>' +
+    '<div class="card-label">Yo\'lda 🚚</div>' +
+    '<div class="card-val c-blue">' + tYolda + '</div>' +
+    '<div class="card-sub">jarayonda</div></div>' +
 
     '<div class="card" style="border-color:' + (tFnet>=0?'rgba(5,150,105,.2)':'rgba(220,38,38,.2)') + '">' +
     '<div class="card-accent" style="background:' + (tFnet>=0?'var(--green)':'var(--red)') + '"></div>' +
@@ -806,7 +820,21 @@ function renderKunlik() {
     var sf    = k.qab > 0 ? (k.yet/k.qab*100) : 0;
     var ln    = k.lid > 0 ? (k.xar/k.lid) : 0;
     var qxStr = qoshX > 0 ? fS(qoshX) : '\u2014';
-    return '<tr>' +
+    
+    // Kun to'liq yopilganmi? (Qabul = Yetkazilgan + Yetib bormagan)
+    var toliqYopilgan = k.qab > 0 && (k.yet + k.qay) === k.qab;
+    var rowStyle = '';
+    if (toliqYopilgan) {
+      if (foyda >= 0) {
+        // Foydada - och yashil
+        rowStyle = 'style="background:rgba(5,150,105,.08)"';
+      } else {
+        // Zararda - och qizil
+        rowStyle = 'style="background:rgba(220,38,38,.08)"';
+      }
+    }
+    
+    return '<tr ' + rowStyle + '>' +
       '<td class="mono c-gold">' + k.san + '</td>' +
       '<td class="bold">' + m.nom + '</td>' +
       '<td class="mono c-yellow">' + f$(k.xar) + '</td>' +
