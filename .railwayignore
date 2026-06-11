@@ -1,0 +1,7 @@
+client/
+*.md
+Screenshots.rar
+yuboraman-platform.tar.gz
+.git/
+.gitignore
+ADMIN_CREDENTIALS.md
