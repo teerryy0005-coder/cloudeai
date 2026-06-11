@@ -87,10 +87,6 @@ const Login = () => {
             {loading ? 'Yuklanmoqda...' : 'Kirish'}
           </button>
         </form>
-        
-        <div className="login-footer">
-          <p>Hisobingiz yo'qmi? <a href="/register">Ro'yxatdan o'ting</a></p>
-        </div>
       </div>
     </div>
   );
