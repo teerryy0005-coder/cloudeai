@@ -626,7 +626,7 @@ function renderUmumiy() {
     p.qab += k.qab; p.yet += k.yet; p.qay += k.qay;
   });
 
-  var tX=0, tL=0, tSif=0, tQab=0, tY=0, tQay=0, tD=0, tF=0, tTaxmin=0;
+  var tX=0, tL=0, tSif=0, tQab=0, tY=0, tQay=0, tYolda=0, tD=0, tF=0, tTaxmin=0;
   var rows = [];
   var qoshXar = xarajatlar.reduce(function(s,x){return s+x.sum;},0);
 
@@ -657,7 +657,7 @@ function renderUmumiy() {
     var yolda = p.qab - yet_v - qay_v;
 
     tX += p.xar; tL += p.lid; tSif += p.sif; tQab += p.qab;
-    tY += yet_v; tQay += qay_v; tD += darom; tF += foyda; tTaxmin += txFoy;
+    tY += yet_v; tQay += qay_v; tYolda += yolda; tD += darom; tF += foyda; tTaxmin += txFoy;
 
     rows.push('<tr>' +
       '<td class="bold">' + p.nom + '</td>' +
@@ -701,7 +701,7 @@ function renderUmumiy() {
     '<td></td>' +
     '<td class="mono c-green bold">' + tY + '</td>' +
     '<td class="mono c-red bold">' + tQay + '</td>' +
-    '<td></td>' +
+    '<td class="mono c-blue bold">' + tYolda + '</td>' +
     '<td></td>' +
     '<td></td>' +
     '<td></td>' +
