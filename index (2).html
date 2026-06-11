@@ -195,23 +195,23 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
   <div class="twrap">
     <table>
       <thead><tr>
-        <th>Mahsulot</th>
-        <th>Xarajat($)</th>
-        <th>Lid</th>
-        <th>Sifatli</th>
-        <th>Qabul</th>
-        <th>Qabul%</th>
-        <th>Yetkazilgan ✏️</th>
-        <th>Yetib bormagan ✏️</th>
-        <th>Yo'lda 🚚</th>
-        <th>Sotuv%</th>
-        <th>Lid $</th>
-        <th>Komissiya</th>
-        <th>Haqiqiy daromad</th>
-        <th>Sof foyda</th>
-        <th>ROI</th>
-        <th title="Taxminiy yetib borish foizini kiriting">Taxmin%</th>
-        <th>Taxminiy foyda</th>
+        <th>📦 Mahsulot</th>
+        <th>💰 Xarajat($)</th>
+        <th>👥 Lid</th>
+        <th>⭐ Sifatli</th>
+        <th>📋 Qabul</th>
+        <th>📊 Qabul%</th>
+        <th>🚚 Yetkazilgan ✏️</th>
+        <th>❌ Yetib bormagan ✏️</th>
+        <th>🚛 Yo'lda</th>
+        <th>📈 Sotuv%</th>
+        <th>💵 Lid $</th>
+        <th>💸 Komissiya</th>
+        <th>💰 Haqiqiy daromad</th>
+        <th>💎 Sof foyda</th>
+        <th>📊 ROI</th>
+        <th title="Taxminiy yetib borish foizini kiriting">🎯 Taxmin%</th>
+        <th>🔮 Taxminiy foyda</th>
       </tr></thead>
       <tbody id="u-body"><tr><td colspan="17" class="empty"><div class="empty-icon">📊</div><br>Ma'lumot yo'q</td></tr></tbody>
       <tfoot id="u-foot"></tfoot>
@@ -315,10 +315,10 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
   <div class="twrap">
     <table>
       <thead><tr>
-        <th>Sana</th><th>Mahsulot</th><th>Reklama($)</th><th>Qo'sh.xarajat</th>
-        <th>Lid</th><th>Sifatli</th><th>Qabul</th><th>Qabul%</th>
-        <th>Yetkazilgan</th><th>Yetib bormagan</th><th>Sotuv%</th>
-        <th>Lid $</th><th>Daromad</th><th>Sof foyda</th><th>✏️</th><th>🗑</th>
+        <th>📅 Sana</th><th>📦 Mahsulot</th><th>💰 Reklama($)</th><th>💸 Qo'sh.xarajat</th>
+        <th>👥 Lid</th><th>⭐ Sifatli</th><th>📋 Qabul</th><th>📊 Qabul%</th>
+        <th>🚚 Yetkazilgan</th><th>❌ Yetib bormagan</th><th>📈 Sotuv%</th>
+        <th>💵 Lid $</th><th>💰 Daromad</th><th>💎 Sof foyda</th><th>✏️</th><th>🗑</th>
       </tr></thead>
       <tbody id="k-body"><tr><td colspan="16" class="empty"><div class="empty-icon">📅</div><br>Hali ma'lumot kiritilmagan</td></tr></tbody>
     </table>
@@ -727,62 +727,62 @@ function renderCards(tX, tL, tSif, tQab, tY, tQay, tFnet, tTxNet, tRoi, qoshXar)
   
   var html =
     '<div class="card"><div class="card-accent" style="background:var(--gold)"></div>' +
-    '<div class="card-label">Jami xarajat</div>' +
+    '<div class="card-label">💰 Jami xarajat</div>' +
     '<div class="card-val c-gold">' + f$(tX) + '</div>' +
     '<div class="card-sub">' + Math.round(tX*USD/1000) + "K so'm</div></div>" +
 
     '<div class="card"><div class="card-accent" style="background:var(--blue)"></div>' +
-    '<div class="card-label">Jami lid</div>' +
+    '<div class="card-label">👥 Jami lid</div>' +
     '<div class="card-val c-blue">' + tL + '</div>' +
     '<div class="card-sub">umumiy</div></div>' +
     
     '<div class="card"><div class="card-accent" style="background:var(--purple)"></div>' +
-    '<div class="card-label">Sifatli lid</div>' +
+    '<div class="card-label">⭐ Sifatli lid</div>' +
     '<div class="card-val c-blue">' + tSif + '</div>' +
     '<div class="card-sub">sifatlisi</div></div>' +
     
     '<div class="card"><div class="card-accent" style="background:var(--teal)"></div>' +
-    '<div class="card-label">Qabul qilingan</div>' +
+    '<div class="card-label">📋 Qabul qilingan</div>' +
     '<div class="card-val c-teal">' + tQab + '</div>' +
     '<div class="card-sub">buyurtma</div></div>' +
 
     '<div class="card"><div class="card-accent" style="background:var(--green)"></div>' +
-    '<div class="card-label">Yetkazilgan</div>' +
+    '<div class="card-label">🚚 Yetkazilgan</div>' +
     '<div class="card-val c-green">' + tY + '</div>' +
     '<div class="card-sub">muvaffaqiyatli</div></div>' +
     
     '<div class="card" style="border-color:rgba(220,38,38,.25)">' +
     '<div class="card-accent" style="background:var(--red)"></div>' +
-    '<div class="card-label">Yetib bormagan</div>' +
+    '<div class="card-label">❌ Yetib bormagan</div>' +
     '<div class="card-val c-red">' + tQay + '</div>' +
     '<div class="card-sub">qaytgan</div></div>' +
     
     '<div class="card" style="border-color:rgba(37,99,235,.25)">' +
     '<div class="card-accent" style="background:var(--blue)"></div>' +
-    '<div class="card-label">Yo\'lda 🚚</div>' +
+    '<div class="card-label">🚛 Yo\'lda</div>' +
     '<div class="card-val c-blue">' + tYolda + '</div>' +
     '<div class="card-sub">jarayonda</div></div>' +
 
     '<div class="card" style="border-color:' + (tFnet>=0?'rgba(5,150,105,.2)':'rgba(220,38,38,.2)') + '">' +
     '<div class="card-accent" style="background:' + (tFnet>=0?'var(--green)':'var(--red)') + '"></div>' +
-    '<div class="card-label">Sof foyda (haqiqiy)</div>' +
+    '<div class="card-label">💎 Sof foyda (haqiqiy)</div>' +
     '<div class="card-val ' + (tFnet>=0?'c-green':'c-red') + '">' + (tFnet>=0?'+':'') + fK(tFnet) + '</div>' +
     '<div class="card-sub">' + (tFnet>=0?'foydali':'zararli') + '</div></div>' +
 
     '<div class="card" style="border-color:rgba(8,145,178,.25)">' +
     '<div class="card-accent" style="background:var(--teal)"></div>' +
-    '<div class="card-label">Taxminiy foyda</div>' +
+    '<div class="card-label">🔮 Taxminiy foyda</div>' +
     '<div class="card-val c-teal">' + (tTxNet>=0?'+':'') + fK(tTxNet) + '</div>' +
     '<div class="card-sub">foiz asosida</div></div>' +
 
     '<div class="card"><div class="card-accent" style="background:' + (tRoi>=0?'var(--green)':'var(--red)') + '"></div>' +
-    '<div class="card-label">ROI</div>' +
+    '<div class="card-label">📊 ROI</div>' +
     '<div class="card-val ' + (tRoi>=0?'c-green':'c-red') + '">' + fP(tRoi) + '</div>' +
     '<div class="card-sub">daromadlilik</div></div>';
 
   if (qoshXar > 0) {
     html += '<div class="card"><div class="card-accent" style="background:var(--red)"></div>' +
-      "<div class=\"card-label\">Qo'sh. xarajat</div>" +
+      "<div class=\"card-label\">💸 Qo'sh. xarajat</div>" +
       '<div class="card-val c-red">-' + Math.round(qoshXar/1000) + "K</div><div class=\"card-sub\">so'm</div></div>";
   }
   document.getElementById('sum-cards').innerHTML = html;
