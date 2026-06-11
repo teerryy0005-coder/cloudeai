@@ -10,15 +10,12 @@ import {
   Globe,
   Key,
   Settings,
-  LogOut,
   ChevronLeft
 } from 'lucide-react';
-import useAuthStore from '../store/useAuthStore';
 import './Sidebar.css';
 
 const Sidebar = ({ isOpen, toggleSidebar }) => {
   const location = useLocation();
-  const { user, logout } = useAuthStore();
   
   const menuItems = [
     { path: '/', icon: LayoutDashboard, label: 'Bosh sahifa', section: 'ASOSIY' },
@@ -69,11 +66,11 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       <div className="sidebar-footer">
         <div className="user-info">
           <div className="user-avatar">
-            {user?.name?.charAt(0).toUpperCase() || 'Z'}
+            A
           </div>
           {isOpen && (
             <div className="user-details">
-              <div className="user-name">{user?.name || 'Ziyodulla Xushvaqtov'}</div>
+              <div className="user-name">Admin</div>
               <div className="user-phone">+998901784542</div>
             </div>
           )}
@@ -85,11 +82,6 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             <div className="balance-amount">0 so'm</div>
           </div>
         )}
-        
-        <button onClick={logout} className="logout-btn" title="Chiqish">
-          <LogOut size={20} />
-          {isOpen && <span>Chiqish</span>}
-        </button>
       </div>
     </div>
   );

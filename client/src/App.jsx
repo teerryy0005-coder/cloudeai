@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -6,15 +6,8 @@ import 'react-toastify/dist/ReactToastify.css';
 import Sidebar from './components/Sidebar';
 import Dashboard from './pages/Dashboard';
 import Integrations from './pages/Integrations';
-import Login from './pages/Login';
-import useAuthStore from './store/useAuthStore';
 
 import './App.css';
-
-const PrivateRoute = ({ children }) => {
-  const { isAuthenticated } = useAuthStore();
-  return isAuthenticated ? children : <Navigate to="/login" />;
-};
 
 const AppLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -34,12 +27,6 @@ const AppLayout = ({ children }) => {
 };
 
 function App() {
-  const { loadUser, isAuthenticated } = useAuthStore();
-  
-  useEffect(() => {
-    loadUser();
-  }, []);
-  
   return (
     <Router>
       <ToastContainer
@@ -55,55 +42,45 @@ function App() {
       />
       
       <Routes>
-        <Route path="/login" element={<Login />} />
-        
         <Route
           path="/"
           element={
-            <PrivateRoute>
-              <AppLayout>
-                <Dashboard />
-              </AppLayout>
-            </PrivateRoute>
+            <AppLayout>
+              <Dashboard />
+            </AppLayout>
           }
         />
         
         <Route
           path="/integrations"
           element={
-            <PrivateRoute>
-              <AppLayout>
-                <Integrations />
-              </AppLayout>
-            </PrivateRoute>
+            <AppLayout>
+              <Integrations />
+            </AppLayout>
           }
         />
         
         <Route
           path="/reports"
           element={
-            <PrivateRoute>
-              <AppLayout>
-                <div style={{ padding: '30px' }}>
-                  <h1>Hisobotlar</h1>
-                  <p>Tez orada...</p>
-                </div>
-              </AppLayout>
-            </PrivateRoute>
+            <AppLayout>
+              <div style={{ padding: '30px' }}>
+                <h1>Hisobotlar</h1>
+                <p>Tez orada...</p>
+              </div>
+            </AppLayout>
           }
         />
         
         <Route
           path="/products"
           element={
-            <PrivateRoute>
-              <AppLayout>
-                <div style={{ padding: '30px' }}>
-                  <h1>Mahsulotlar</h1>
-                  <p>Tez orada...</p>
-                </div>
-              </AppLayout>
-            </PrivateRoute>
+            <AppLayout>
+              <div style={{ padding: '30px' }}>
+                <h1>Mahsulotlar</h1>
+                <p>Tez orada...</p>
+              </div>
+            </AppLayout>
           }
         />
         
