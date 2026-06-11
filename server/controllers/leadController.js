@@ -181,7 +181,7 @@ exports.getRecentActivities = async (req, res) => {
     const activities = recentLeads.map(lead => ({
       id: lead._id,
       type: lead.sentToExternalAPI ? 'success' : 'pending',
-      title: `Lid: ${lead.customerName || 'No'matalom'}`,
+      title: `Lid: ${lead.customerName || 'Noma\'lum'}`,
       description: `Muvaffaqiyatli yuborildi - ${getTimeAgo(lead.createdAt)}`,
       timestamp: lead.createdAt
     }));
