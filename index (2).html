@@ -42,6 +42,8 @@ main{flex:1;padding:1.75rem;max-width:1500px;margin:0 auto;width:100%}
 .panel.active{display:block;animation:fadeIn .25s ease}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1rem;margin-bottom:1.75rem}
+@media(min-width:641px) and (max-width:1200px){.cards{grid-template-columns:repeat(3,1fr)}}
+@media(min-width:1201px){.cards{grid-template-columns:repeat(5,1fr)}}
 .card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:1.25rem 1rem;position:relative;overflow:hidden;transition:border-color .2s,transform .2s}
 .card:hover{border-color:var(--border2);transform:translateY(-2px)}
 .card-accent{position:absolute;top:0;left:0;right:0;height:2px}
@@ -130,7 +132,25 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
 .kalk-big-sub{font-size:.72rem;color:var(--muted2);margin-top:.3rem}
 .kalk-mah-select{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:.6rem .85rem;font-size:.9rem;color:var(--text);font-family:'DM Sans',sans-serif;outline:none;transition:border-color .2s;margin-bottom:1rem}
 .kalk-hint{font-size:.72rem;color:var(--muted);text-align:center;padding:.5rem;line-height:1.6}
-@media(max-width:640px){main{padding:1rem}.topbar{padding:.85rem 1rem}.cards{grid-template-columns:repeat(2,1fr)}.fgrid{grid-template-columns:1fr 1fr}table{min-width:800px}}
+@media(max-width:640px){
+  main{padding:1rem}
+  .topbar{padding:.85rem 1rem;flex-direction:column;align-items:stretch}
+  .topbar-right{flex-direction:column;width:100%}
+  .nav-tabs{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .cards{grid-template-columns:1fr 1fr;gap:.75rem}
+  .fgrid{grid-template-columns:1fr}
+  table{min-width:800px;font-size:.8rem}
+  th,td{padding:.5rem .6rem;font-size:.75rem}
+  .kalk-wrap{grid-template-columns:1fr}
+  .edit-modal{padding:1.25rem;max-width:95%}
+  .xarajat-row{flex-direction:column}
+  .xarajat-row .fg{width:100%;min-width:unset}
+}
+@media(max-width:480px){
+  .card{padding:1rem .75rem}
+  .card-val{font-size:1.1rem}
+  .btn,.btn-outline{padding:.5rem .9rem;font-size:.82rem}
+}
 </style>
 </head>
 <body>
@@ -159,6 +179,16 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
 
 <!-- UMUMIY -->
 <div class="panel active" id="panel-umumiy">
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;margin-bottom:1.1rem">
+    <div class="sec-title" style="margin-bottom:0">📊 Umumiy statistika</div>
+    <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap">
+      <label style="font-size:.75rem;font-weight:600;color:var(--muted2);text-transform:uppercase;letter-spacing:.07em">📅 Dan:</label>
+      <input type="date" id="u-filtr-dan" style="background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:.4rem .8rem;font-size:.88rem;color:var(--text);outline:none;cursor:pointer" oninput="renderUmumiy()">
+      <label style="font-size:.75rem;font-weight:600;color:var(--muted2);text-transform:uppercase;letter-spacing:.07em">Gacha:</label>
+      <input type="date" id="u-filtr-gacha" style="background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:.4rem .8rem;font-size:.88rem;color:var(--text);outline:none;cursor:pointer" oninput="renderUmumiy()">
+      <button onclick="document.getElementById('u-filtr-dan').value='';document.getElementById('u-filtr-gacha').value='';renderUmumiy();" style="background:var(--bg3);border:1px solid var(--border2);border-radius:7px;padding:.4rem .85rem;font-size:.8rem;font-weight:600;color:var(--muted2);cursor:pointer">✕ Tozalash</button>
+    </div>
+  </div>
   <div class="cards" id="sum-cards">
     <div class="card"><div class="card-accent" style="background:var(--gold)"></div><div class="card-label">Yuklanmoqda</div><div class="card-val">—</div></div>
   </div>
@@ -574,14 +604,28 @@ function renderUmumiy() {
                  overrides:m.overrides, taxminFoiz:m.taxminFoiz||0,
                  xar:0, lid:0, sif:0, qab:0, yet:0, qay:0};
   });
-  kunliklar.forEach(function(k) {
+  
+  // Sana filtri
+  var filtrDan = (document.getElementById('u-filtr-dan')||{}).value || '';
+  var filtrGacha = (document.getElementById('u-filtr-gacha')||{}).value || '';
+  var filteredKunlik = kunliklar;
+  if (filtrDan || filtrGacha) {
+    filteredKunlik = kunliklar.filter(function(k) {
+      var kDate = new Date(k.san);
+      if (filtrDan && kDate < new Date(filtrDan)) return false;
+      if (filtrGacha && kDate > new Date(filtrGacha)) return false;
+      return true;
+    });
+  }
+  
+  filteredKunlik.forEach(function(k) {
     if (!byP[k.mid]) return;
     var p = byP[k.mid];
     p.xar += k.xar; p.lid += k.lid; p.sif += k.sif;
     p.qab += k.qab; p.yet += k.yet; p.qay += k.qay;
   });
 
-  var tX=0, tL=0, tY=0, tD=0, tF=0, tTaxmin=0;
+  var tX=0, tL=0, tSif=0, tQab=0, tY=0, tQay=0, tD=0, tF=0, tTaxmin=0;
   var rows = [];
   var qoshXar = xarajatlar.reduce(function(s,x){return s+x.sum;},0);
 
@@ -608,7 +652,8 @@ function renderUmumiy() {
     var txDar = txYet * p.kom;
     var txFoy = txDar - xS;
 
-    tX += p.xar; tL += p.lid; tY += yet_v; tD += darom; tF += foyda; tTaxmin += txFoy;
+    tX += p.xar; tL += p.lid; tSif += p.sif; tQab += p.qab;
+    tY += yet_v; tQay += qay_v; tD += darom; tF += foyda; tTaxmin += txFoy;
 
     rows.push('<tr>' +
       '<td class="bold">' + p.nom + '</td>' +
@@ -646,10 +691,12 @@ function renderUmumiy() {
     '<td class="bold">HAQIQIY</td>' +
     '<td class="mono c-yellow">' + f$(tX) + '</td>' +
     '<td class="mono bold">' + tL + '</td>' +
-    '<td colspan="2"></td>' +
+    '<td class="mono bold">' + tSif + '</td>' +
+    '<td class="mono bold">' + tQab + '</td>' +
     '<td></td>' +
     '<td class="mono c-green bold">' + tY + '</td>' +
-    '<td colspan="2"></td>' +
+    '<td class="mono c-red bold">' + tQay + '</td>' +
+    '<td></td>' +
     '<td></td>' +
     '<td></td>' +
     '<td class="mono c-green bold">' + fS(tD) + '</td>' +
@@ -666,10 +713,10 @@ function renderUmumiy() {
     '</tr>' : '';
 
   // cards
-  renderCards(tX, tL, tY, tFnet, tTxNet, tRoi, qoshXar);
+  renderCards(tX, tL, tSif, tQab, tY, tQay, tFnet, tTxNet, tRoi, qoshXar);
 }
 
-function renderCards(tX, tL, tY, tFnet, tTxNet, tRoi, qoshXar) {
+function renderCards(tX, tL, tSif, tQab, tY, tQay, tFnet, tTxNet, tRoi, qoshXar) {
   var html =
     '<div class="card"><div class="card-accent" style="background:var(--gold)"></div>' +
     '<div class="card-label">Jami xarajat</div>' +
@@ -679,12 +726,28 @@ function renderCards(tX, tL, tY, tFnet, tTxNet, tRoi, qoshXar) {
     '<div class="card"><div class="card-accent" style="background:var(--blue)"></div>' +
     '<div class="card-label">Jami lid</div>' +
     '<div class="card-val c-blue">' + tL + '</div>' +
-    '<div class="card-sub">jami</div></div>' +
+    '<div class="card-sub">umumiy</div></div>' +
+    
+    '<div class="card"><div class="card-accent" style="background:var(--purple)"></div>' +
+    '<div class="card-label">Sifatli lid</div>' +
+    '<div class="card-val c-blue">' + tSif + '</div>' +
+    '<div class="card-sub">sifatlisi</div></div>' +
+    
+    '<div class="card"><div class="card-accent" style="background:var(--teal)"></div>' +
+    '<div class="card-label">Qabul qilingan</div>' +
+    '<div class="card-val c-teal">' + tQab + '</div>' +
+    '<div class="card-sub">buyurtma</div></div>' +
 
     '<div class="card"><div class="card-accent" style="background:var(--green)"></div>' +
     '<div class="card-label">Yetkazilgan</div>' +
     '<div class="card-val c-green">' + tY + '</div>' +
-    '<div class="card-sub">buyurtma</div></div>' +
+    '<div class="card-sub">muvaffaqiyatli</div></div>' +
+    
+    '<div class="card" style="border-color:rgba(220,38,38,.25)">' +
+    '<div class="card-accent" style="background:var(--red)"></div>' +
+    '<div class="card-label">Yetib bormagan</div>' +
+    '<div class="card-val c-red">' + tQay + '</div>' +
+    '<div class="card-sub">qaytgan</div></div>' +
 
     '<div class="card" style="border-color:' + (tFnet>=0?'rgba(5,150,105,.2)':'rgba(220,38,38,.2)') + '">' +
     '<div class="card-accent" style="background:' + (tFnet>=0?'var(--green)':'var(--red)') + '"></div>' +
