@@ -8,13 +8,13 @@ const {
   deleteIntegration,
   testIntegration
 } = require('../controllers/integrationController');
-const { protect, admin } = require('../middleware/auth');
 
-router.get('/', protect, getAllIntegrations);
-router.get('/:id', protect, getIntegration);
-router.post('/', protect, admin, createIntegration);
-router.put('/:id', protect, admin, updateIntegration);
-router.delete('/:id', protect, admin, deleteIntegration);
-router.post('/:id/test', protect, testIntegration);
+// No auth required - direct access
+router.get('/', getAllIntegrations);
+router.get('/:id', getIntegration);
+router.post('/', createIntegration);
+router.put('/:id', updateIntegration);
+router.delete('/:id', deleteIntegration);
+router.post('/:id/test', testIntegration);
 
 module.exports = router;

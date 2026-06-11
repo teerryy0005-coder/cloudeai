@@ -22,7 +22,14 @@ global.io = io;
 connectDB();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: [
+    'https://profound-brigadeiros-873db7.netlify.app',
+    'http://localhost:3000',
+    'http://localhost:5000'
+  ],
+  credentials: true
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -35,8 +42,7 @@ io.on('connection', (socket) => {
   });
 });
 
-// Routes
-app.use('/api/auth', require('./routes/auth'));
+// Routes (No auth required - direct access)
 app.use('/api/leads', require('./routes/leads'));
 app.use('/api/integrations', require('./routes/integrations'));
 app.use('/api/webhook', require('./routes/webhook'));

@@ -7,12 +7,12 @@ const {
   getStatistics,
   getRecentActivities
 } = require('../controllers/leadController');
-const { protect } = require('../middleware/auth');
 
-router.get('/', protect, getAllLeads);
-router.get('/statistics', protect, getStatistics);
-router.get('/activities', protect, getRecentActivities);
-router.get('/:id', protect, getLead);
-router.put('/:id/status', protect, updateLeadStatus);
+// No auth middleware - direct access
+router.get('/', getAllLeads);
+router.get('/statistics', getStatistics);
+router.get('/activities', getRecentActivities);
+router.get('/:id', getLead);
+router.put('/:id/status', updateLeadStatus);
 
 module.exports = router;
