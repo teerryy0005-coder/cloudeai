@@ -67,9 +67,38 @@ app.use((err, req, res, next) => {
   });
 });
 
+// Auto-create admin user on first run
+const createAdminOnStartup = async () => {
+  try {
+    const User = require('./models/User');
+    const bcrypt = require('bcryptjs');
+    
+    const adminEmail = process.env.ADMIN_EMAIL || 'teerryy0005@gmail.com';
+    const adminPassword = process.env.ADMIN_PASSWORD || '250502@Xz';
+    
+    const existingAdmin = await User.findOne({ email: adminEmail });
+    
+    if (!existingAdmin) {
+      const hashedPassword = await bcrypt.hash(adminPassword, 10);
+      await User.create({
+        name: 'Admin',
+        email: adminEmail,
+        password: hashedPassword,
+        role: 'admin',
+        isActive: true
+      });
+      console.log('✅ Admin user created automatically');
+      console.log('📧 Email:', adminEmail);
+      console.log('🔑 Password:', adminPassword);
+    }
+  } catch (error) {
+    console.log('⚠️  Note: Admin user creation skipped (will be created after DB connection)');
+  }
+};
+
 // Start server
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => {
+server.listen(PORT, async () => {
   console.log(`
 ╔═══════════════════════════════════════╗
 ║   🚀 Yuboraman Platform Server       ║
@@ -78,6 +107,9 @@ server.listen(PORT, () => {
 ║   ✅ Status: Running                 ║
 ╚═══════════════════════════════════════╝
   `);
+  
+  // Wait a bit for DB connection, then create admin
+  setTimeout(createAdminOnStartup, 2000);
 });
 
 module.exports = { app, server, io };
