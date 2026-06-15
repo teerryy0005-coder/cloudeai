@@ -803,7 +803,7 @@ function renderKunlik() {
   var filtrSan = (document.getElementById('k-filtr-san')||{}).value || '';
   var filtered2 = filtrSan ? kunliklar.filter(function(k){ return k.san === filtrSan; }) : kunliklar;
   if (!filtered2.length) {
-    tb.innerHTML = '<tr><td colspan="16" class="empty"><div class="empty-icon">📅</div><br>' + (filtrSan ? filtrSan+' kuni ma\'lumot yo\'q' : 'Hali ma\'lumot kiritilmagan') + '</td></tr>';
+    tb.innerHTML = '<tr><td colspan="17" class="empty"><div class="empty-icon">📅</div><br>' + (filtrSan ? filtrSan+' kuni ma\'lumot yo\'q' : 'Hali ma\'lumot kiritilmagan') + '</td></tr>';
     return;
   }
   var sorted = filtered2.slice().sort(function(a,b){ return new Date(b.san)-new Date(a.san); });
@@ -844,7 +844,8 @@ function renderKunlik() {
       '<td class="mono">' + k.qab + '</td>' +
       '<td><span class="badge ' + qClass(qp) + '">' + fP(qp) + '</span></td>' +
       '<td class="mono c-green">' + k.yet + '</td>' +
-      '<td class="mono c-muted">' + k.qay + '</td>' +
+      '<td class="mono c-red">' + k.qay + '</td>' +
+      '<td class="mono c-gold bold">' + (k.qab - k.yet - k.qay) + '</td>' +
       '<td><span class="badge ' + sfClass(sf) + '">' + fP(sf) + '</span></td>' +
       '<td class="mono c-yellow">' + f$(ln) + '</td>' +
       '<td class="mono c-blue">' + fS(darom) + '</td>' +
