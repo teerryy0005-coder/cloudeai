@@ -9,6 +9,12 @@
   NODE_VERSION = "18"
   CI = "false"
 
+# Dashboard HTML sahifa (alohida)
+[[redirects]]
+  from = "/dashboard"
+  to = "/dashboard/index.html"
+  status = 200
+
 # Redirect all routes to index.html for React Router
 [[redirects]]
   from = "/*"
