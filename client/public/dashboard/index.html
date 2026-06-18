@@ -385,20 +385,26 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
     <h3 style="font-size:1rem;font-weight:700;margin-bottom:.5rem">🔥 Firebase orqali sinxronlash</h3>
     <p style="font-size:.83rem;color:#6b6e8f;margin-bottom:1.25rem;line-height:1.6">
       Boshqa qurilmada ham ma'lumotlarni ko'rish uchun Firebase kerak.<br>
-      <b style="color:#d4860a">Qanday sozlash:</b><br>
-      1. <a href="https://console.firebase.google.com" target="_blank" style="color:#2563eb;text-decoration:underline">console.firebase.google.com</a> → yangi project<br>
-      2. <b>Realtime Database</b> → Create → <b>Test mode</b> tanlang<br>
-      3. Database URL ni ko'chirib quyiga kiriting (masalan: <code style="background:#f0f1f7;padding:2px 4px;border-radius:3px;font-size:.75rem">https://sizning-project-default-rtdb.firebaseio.com</code>)<br>
-      4. <b>Project Settings</b> → <b>Service Accounts</b> → <b>Database secrets</b> → Secret ni ko'ring va quyiga kiriting<br>
-      <b style="color:#059669">✓ Agar Firebase ishlamasa:</b> Eksport/Import orqali ma'lumotlarni boshqa qurilmaga o'tkaz.
+      <b style="color:#d4860a">📋 Qanday sozlash (OSON):</b><br>
+      1. <a href="https://console.firebase.google.com" target="_blank" style="color:#2563eb;text-decoration:underline">console.firebase.google.com</a> → <b>Add project</b> → nom bering<br>
+      2. <b>Realtime Database</b> → <b>Create Database</b><br>
+      3. Location: <b>United States</b> → Start in <b style="color:#059669">test mode</b> ← MUHIM!<br>
+      4. Database URL ni ko'chirib quyiga kiriting<br>
+      <small style="color:#9ea3bf">Masalan: https://sizning-project-default-rtdb.firebaseio.com</small><br>
+      5. <b style="color:#059669">Secret (ixtiyoriy)</b> - Test mode'da shart emas!<br>
+      <br>
+      <b style="color:#dc2626">⚠ Agar Test mode ishlamasa:</b> Rules'ni o'zgartiring:<br>
+      Database → Rules → <code style="background:#f0f1f7;padding:2px 4px;border-radius:3px;font-size:.75rem">{".read": true, ".write": true}</code> → Publish<br>
+      <br>
+      <b style="color:#059669">✓ Firebase ishlamasa:</b> Eksport/Import orqali ma'lumotlarni boshqa qurilmaga o'tkaz.
     </p>
     <div style="margin-bottom:.85rem">
       <label style="display:block;font-size:.7rem;font-weight:600;color:#6b6e8f;text-transform:uppercase;margin-bottom:.35rem">Database URL</label>
       <input id="fb-url-inp" placeholder="https://your-project-default-rtdb.firebaseio.com" style="width:100%;padding:.6rem .8rem;border:1px solid rgba(0,0,0,.13);border-radius:8px;font-size:.9rem;outline:none">
     </div>
     <div style="margin-bottom:1.25rem">
-      <label style="display:block;font-size:.7rem;font-weight:600;color:#6b6e8f;text-transform:uppercase;margin-bottom:.35rem">Database Secret (token)</label>
-      <input id="fb-key-inp" placeholder="Database secret yoki API key" style="width:100%;padding:.6rem .8rem;border:1px solid rgba(0,0,0,.13);border-radius:8px;font-size:.9rem;outline:none">
+      <label style="display:block;font-size:.7rem;font-weight:600;color:#6b6e8f;text-transform:uppercase;margin-bottom:.35rem">Database Secret (ixtiyoriy - Test mode'da kerak emas)</label>
+      <input id="fb-key-inp" placeholder="Bo'sh qoldiring (Test mode)" style="width:100%;padding:.6rem .8rem;border:1px solid rgba(0,0,0,.13);border-radius:8px;font-size:.9rem;outline:none">
     </div>
     <div style="display:flex;gap:.75rem;flex-wrap:wrap">
       <button onclick="saveFbCfg()" style="background:#d4860a;color:#000;border:none;border-radius:8px;padding:.62rem 1.4rem;font-weight:700;cursor:pointer;font-size:.88rem">✓ Saqlash va ulanish</button>
@@ -512,8 +518,8 @@ function initStorage() {
 }
 
 // Firebase config — URL va KEY kodga yozilgan (har qurilmada ishlaydi)
-var FB_URL_DEFAULT = 'https://target-dashbord-default-rtdb.us-central1.firebasedatabase.app';
-var FB_KEY_DEFAULT = 'rMjKuoWnWJUF8OMzxdMyxhYFyZBmo75sRPxNdcm3';
+var FB_URL_DEFAULT = 'https://target-dashbord-default-rtdb.firebaseio.com';
+var FB_KEY_DEFAULT = '';
 var FB_URL = localStorage.getItem('fb-url') || FB_URL_DEFAULT;
 var FB_KEY = localStorage.getItem('fb-key') || FB_KEY_DEFAULT;
 
@@ -526,34 +532,35 @@ function saveData() {
     localStorage.setItem('td-xarajatlar',  JSON.stringify(xarajatlar));
   } catch(e) {}
 
-  if (FB_URL && FB_KEY) {
-    // Firebase REST API orqali saqlash - auth parametri bilan
+  if (FB_URL) {
+    // Firebase REST API orqali saqlash
     var data = {
       mahsulotlar: mahsulotlar.reduce(function(o,m){o[m.id]=m;return o;},{}),
       kunliklar:   kunliklar.reduce(function(o,k){o[k.id]=k;return o;},{}),
       xarajatlar:  xarajatlar.reduce(function(o,x){o[x.id]=x;return o;},{})
     };
-    var saveUrls = [
-      FB_URL + '/td.json?auth=' + FB_KEY,
-      'https://target-dashbord-default-rtdb.us-central1.firebasedatabase.app/td.json?auth=' + FB_KEY,
-    ];
-    function trySave(i) {
-      if (i >= saveUrls.length) { 
-        // Firebase ishlamasa ham, localStorage ishladi - OK
+    var url = FB_URL + '/td.json';
+    if (FB_KEY) url += '?auth=' + FB_KEY;
+    
+    fetch(url, {
+      method: 'PUT',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(data)
+    }).then(function(r){
+      if(r.ok){ 
+        setSyncStatus('ok'); 
+        showToast('✓ Firebase ga saqlandi'); 
+        console.log('✓ Firebase save: success');
+      } else { 
         setSyncStatus('ok'); 
         showToast('✓ Saqlandi (faqat qurilmada)', true); 
-        return; 
+        console.warn('⚠ Firebase save failed:', r.status);
       }
-      fetch(saveUrls[i], {
-        method: 'PUT',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify(data)
-      }).then(function(r){
-        if(r.ok){ setSyncStatus('ok'); showToast('✓ Firebase ga saqlandi'); }
-        else { trySave(i+1); }
-      }).catch(function(){ trySave(i+1); });
-    }
-    trySave(0);
+    }).catch(function(err){ 
+      setSyncStatus('ok'); 
+      showToast('✓ Saqlandi (faqat qurilmada)', true); 
+      console.warn('⚠ Firebase save error:', err);
+    });
   } else {
     setSyncStatus('ok');
     showToast('✓ Saqlandi');
@@ -561,49 +568,46 @@ function saveData() {
 }
 
 function loadFromFirebase(cb) {
-  var done = false;
-  var timer = setTimeout(function(){
-    if (!done) { done = true; setSyncStatus('ok'); cb(false); }
-  }, 6000);
-
-  function tryFetch(url) {
-    // Auth parametri bilan so'rov
-    var urlWithAuth = url + (url.indexOf('?') === -1 ? '?' : '&') + 'auth=' + FB_KEY;
-    return fetch(urlWithAuth, {method:'GET', mode:'cors'})
-      .then(function(r){
-        if (!r.ok) throw new Error(r.status);
-        return r.json();
-      });
-  }
-
-  var urls = [
-    FB_URL + '/td.json',
-    'https://target-dashbord-default-rtdb.us-central1.firebasedatabase.app/td.json',
-  ];
-
-  function tryNext(i) {
-    if (i >= urls.length) {
-      if (!done) { done = true; clearTimeout(timer); setSyncStatus('ok'); cb(false); }
-      return;
-    }
-    tryFetch(urls[i])
-      .then(function(d){
-        if (done) return;
-        clearTimeout(timer); done = true;
-        if (d && d.mahsulotlar) {
-          mahsulotlar = Object.values(d.mahsulotlar);
-          kunliklar   = d.kunliklar   ? Object.values(d.kunliklar)   : [];
-          xarajatlar  = d.xarajatlar  ? Object.values(d.xarajatlar)  : [];
-          localStorage.setItem('td-mahsulotlar', JSON.stringify(mahsulotlar));
-          localStorage.setItem('td-kunliklar',   JSON.stringify(kunliklar));
-          localStorage.setItem('td-xarajatlar',  JSON.stringify(xarajatlar));
-          setSyncStatus('ok');
-          cb(true);
-        } else { tryNext(i + 1); }
-      })
-      .catch(function(){ tryNext(i + 1); });
-  }
-  tryNext(0);
+  if (!FB_URL) { cb(false); return; }
+  
+  setSyncStatus('loading');
+  var url = FB_URL + '/td.json';
+  if (FB_KEY) url += '?auth=' + FB_KEY;
+  
+  console.log('🔄 Firebase load:', url);
+  
+  fetch(url, {method:'GET', mode:'cors'})
+    .then(function(r){
+      if (!r.ok) {
+        console.warn('⚠ Firebase load failed:', r.status);
+        setSyncStatus('ok'); 
+        cb(false);
+        return null;
+      }
+      return r.json();
+    })
+    .then(function(d){
+      if (d && d.mahsulotlar) {
+        mahsulotlar = Object.values(d.mahsulotlar);
+        kunliklar   = d.kunliklar   ? Object.values(d.kunliklar)   : [];
+        xarajatlar  = d.xarajatlar  ? Object.values(d.xarajatlar)  : [];
+        localStorage.setItem('td-mahsulotlar', JSON.stringify(mahsulotlar));
+        localStorage.setItem('td-kunliklar',   JSON.stringify(kunliklar));
+        localStorage.setItem('td-xarajatlar',  JSON.stringify(xarajatlar));
+        setSyncStatus('ok');
+        console.log('✓ Firebase load: success');
+        cb(true);
+      } else {
+        console.log('ℹ Firebase: ma\'lumot topilmadi');
+        setSyncStatus('ok');
+        cb(false);
+      }
+    })
+    .catch(function(err){
+      console.warn('⚠ Firebase load error:', err);
+      setSyncStatus('ok');
+      cb(false);
+    });
 }
 
 function switchTab(tab, el) {
