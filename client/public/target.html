@@ -464,10 +464,18 @@ function showToast(msg, warn) {
 
 function defaultMahsulotlar() {
   return [
-    {id:1, nom:'Pheramone 21+',     narx:69000,  kom:30000,  hold:780000},
-    {id:2, nom:'Fraink 77.000',      narx:77000,  kom:30000,  hold:780000},
-    {id:3, nom:'Ventilyator ZUMMAA', narx:349000, kom:100000, hold:400000},
-    {id:4, nom:'Snayper',            narx:89000,  kom:35000,  hold:700000}
+    {id:1, nom:'Pheramone 21+',     narx:69000,  kom:30000,  hold:780000, taxminFoiz:0},
+    {id:2, nom:'Fraink 77.000',      narx:77000,  kom:30000,  hold:780000, taxminFoiz:0},
+    {id:3, nom:'Ventilyator ZUMMAA', narx:349000, kom:100000, hold:400000, taxminFoiz:0},
+    {id:4, nom:'Snayper',            narx:89000,  kom:35000,  hold:700000, taxminFoiz:0}
+  ];
+}
+
+function defaultKunliklar() {
+  var today = new Date().toISOString().split('T')[0];
+  return [
+    {id:Date.now()-1000, san:today, mid:1, xar:5.5, lid:25, sif:20, qab:12, yet:8, qay:2, qoshXar:0},
+    {id:Date.now(), san:today, mid:2, xar:8.0, lid:40, sif:35, qab:18, yet:12, qay:3, qoshXar:0}
   ];
 }
 
@@ -479,17 +487,41 @@ function initStorage() {
     var m = localStorage.getItem('td-mahsulotlar');
     var k = localStorage.getItem('td-kunliklar');
     var x = localStorage.getItem('td-xarajatlar');
-    mahsulotlar = m ? JSON.parse(m) : defaultMahsulotlar();
-    kunliklar   = k ? JSON.parse(k) : [];
-    xarajatlar  = x ? JSON.parse(x) : [];
+    
+    // Agar localStorage bo'sh bo'lsa - demo ma'lumotlar
+    if (!m) {
+      console.log('ℹ Birinchi marta ochilmoqda - demo ma\'lumotlar yuklanyapti');
+      mahsulotlar = defaultMahsulotlar();
+      kunliklar = defaultKunliklar();
+      xarajatlar = [];
+      // Demo ma'lumotlarni localStorage ga saqla
+      localStorage.setItem('td-mahsulotlar', JSON.stringify(mahsulotlar));
+      localStorage.setItem('td-kunliklar', JSON.stringify(kunliklar));
+      localStorage.setItem('td-xarajatlar', JSON.stringify(xarajatlar));
+    } else {
+      mahsulotlar = m ? JSON.parse(m) : defaultMahsulotlar();
+      kunliklar   = k ? JSON.parse(k) : defaultKunliklar();
+      xarajatlar  = x ? JSON.parse(x) : [];
+    }
   } catch(e) {
-    mahsulotlar = defaultMahsulotlar(); kunliklar = []; xarajatlar = [];
+    console.error('localStorage xato:', e);
+    mahsulotlar = defaultMahsulotlar(); 
+    kunliklar = defaultKunliklar(); 
+    xarajatlar = [];
   }
   
+  console.log('✓ Ma\'lumotlar yuklandi:', {
+    mahsulotlar: mahsulotlar.length,
+    kunliklar: kunliklar.length,
+    xarajatlar: xarajatlar.length
+  });
+  
   renderAll();
+  setSyncStatus('ok');
   
   // Firebase sozlangan bo'lsa, avtomatik sinxronlash
-  if (FB_URL && FB_KEY && FB_URL !== FB_URL_DEFAULT) {
+  if (FB_URL && FB_URL !== 'https://target-dashbord-default-rtdb.firebaseio.com') {
+    console.log('🔄 Firebase sinxronlash boshlanmoqda...');
     loadFromFirebase(function(ok){
       if (ok) {
         console.log('✓ Firebase dan yuklandi');
@@ -512,8 +544,6 @@ function initStorage() {
         });
       }
     }, 30000); // 30 sekund
-  } else {
-    setSyncStatus('ok');
   }
 }
 
@@ -1190,50 +1220,89 @@ function openFbModal() {
 }
 
 function saveFbCfg() {
-  var url = document.getElementById('fb-url-inp').value.trim() || FB_URL_DEFAULT;
-  var key = document.getElementById('fb-key-inp').value.trim() || FB_KEY_DEFAULT;
-  FB_URL = url; FB_KEY = key;
+  var url = document.getElementById('fb-url-inp').value.trim();
+  var key = document.getElementById('fb-key-inp').value.trim();
+  
+  if (!url) {
+    alert('⚠ Database URL ni kiriting!');
+    return;
+  }
+  
+  // URL formatlash
+  if (url.indexOf('http') !== 0) {
+    url = 'https://' + url;
+  }
+  if (url.indexOf('.firebaseio.com') === -1 && url.indexOf('.firebasedatabase.app') === -1) {
+    alert('⚠ Noto\'g\'ri Firebase URL!\n\nTo\'g\'ri format:\nhttps://project-id-default-rtdb.firebaseio.com');
+    return;
+  }
+  
+  FB_URL = url; 
+  FB_KEY = key;
   localStorage.setItem('fb-url', FB_URL);
   localStorage.setItem('fb-key', FB_KEY);
-  document.getElementById('fb-modal').style.display = 'none';
-  showToast('✓ Firebase sozlandi!');
   
-  // Ma'lumotlarni Firebase ga yuklash
+  console.log('✓ Firebase config saqlandi:', {url: FB_URL, hasKey: !!FB_KEY});
+  
+  // Darhol test qilish
+  showToast('⏳ Firebase test qilinyapti...');
+  
+  // Avval saqlash
   saveData();
   
-  // Avtomatik sinxronlashni yoqish
-  if (syncInterval) clearInterval(syncInterval);
-  syncInterval = setInterval(function(){
-    if (FB_URL && FB_KEY) {
-      console.log('🔄 Avtomatik sinxronlash...');
-      loadFromFirebase(function(ok){
-        if (ok) {
-          renderAll();
-          console.log('✓ Avtomatik yangilandi');
-        }
-      });
-    }
-  }, 30000);
-  
-  // Darhol birinchi marta sinxronlash
+  // Keyin yuklash (1 soniyadan keyin)
   setTimeout(function(){
     loadFromFirebase(function(ok){
+      document.getElementById('fb-modal').style.display = 'none';
       if (ok) {
         renderAll();
         showToast('✓ Firebase bilan sinxronlandi!');
+        // Avtomatik sinxronlashni yoqish
+        if (syncInterval) clearInterval(syncInterval);
+        syncInterval = setInterval(function(){
+          if (FB_URL) {
+            console.log('🔄 Avtomatik sinxronlash...');
+            loadFromFirebase(function(ok){
+              if (ok) {
+                renderAll();
+                console.log('✓ Avtomatik yangilandi');
+              }
+            });
+          }
+        }, 30000);
       } else {
-        showToast('⚠ Firebase ulanmadi', true);
+        showToast('⚠ Firebase ulanmadi. Console ni tekshiring (F12)', true);
+        alert('⚠ Firebase ga ulanib bo\'lmadi!\n\n1. F12 bosib Console ni oching\n2. Xatolarni ko\'ring\n3. Database Rules: {"rules": {".read": true, ".write": true}}');
       }
     });
-  }, 500);
+  }, 1000);
 }
 
 function syncNow() {
-  showToast('Yuklanmoqda...');
-  loadFromFirebase(function(ok){
-    if(ok) { renderAll(); showToast('✓ Firebase dan yuklandi!'); }
-    else showToast('⚠ Firebase ulanmadi', true);
-  });
+  if (!FB_URL) {
+    alert('⚠ Avval Firebase URL ni kiriting!');
+    openFbModal();
+    return;
+  }
+  showToast('🔄 Sinxronlash...', true);
+  console.log('🔄 Manual sync boshlandi');
+  
+  // Avval saqlash
+  saveData();
+  
+  // Keyin yuklash
+  setTimeout(function(){
+    loadFromFirebase(function(ok){
+      if(ok) { 
+        renderAll(); 
+        showToast('✓ Firebase dan yuklandi!'); 
+      } else {
+        showToast('⚠ Firebase ulanmadi. Console tekshiring (F12)', true);
+        console.error('❌ Firebase sync failed. URL:', FB_URL);
+        console.log('💡 Yechim: Firebase Console → Database → Rules → {".read": true, ".write": true}');
+      }
+    });
+  }, 500);
 }
 </script>
 </body>
