@@ -386,10 +386,11 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
     <p style="font-size:.83rem;color:#6b6e8f;margin-bottom:1.25rem;line-height:1.6">
       Boshqa qurilmada ham ma'lumotlarni ko'rish uchun Firebase kerak.<br>
       <b style="color:#d4860a">Qanday sozlash:</b><br>
-      1. <a href="https://console.firebase.google.com" target="_blank" style="color:#2563eb">console.firebase.google.com</a> → yangi project<br>
-      2. Realtime Database → Create → <b>Test mode</b><br>
-      3. Database URL ni quyiga kiriting<br>
-      4. Project Settings → Service Accounts → Database secrets → Secret ni ko'ring
+      1. <a href="https://console.firebase.google.com" target="_blank" style="color:#2563eb;text-decoration:underline">console.firebase.google.com</a> → yangi project<br>
+      2. <b>Realtime Database</b> → Create → <b>Test mode</b> tanlang<br>
+      3. Database URL ni ko'chirib quyiga kiriting (masalan: <code style="background:#f0f1f7;padding:2px 4px;border-radius:3px;font-size:.75rem">https://sizning-project-default-rtdb.firebaseio.com</code>)<br>
+      4. <b>Project Settings</b> → <b>Service Accounts</b> → <b>Database secrets</b> → Secret ni ko'ring va quyiga kiriting<br>
+      <b style="color:#059669">✓ Agar Firebase ishlamasa:</b> Eksport/Import orqali ma'lumotlarni boshqa qurilmaga o'tkaz.
     </p>
     <div style="margin-bottom:.85rem">
       <label style="display:block;font-size:.7rem;font-weight:600;color:#6b6e8f;text-transform:uppercase;margin-bottom:.35rem">Database URL</label>
@@ -422,6 +423,7 @@ var kunliklar = [];
 var xarajatlar = [];
 var activeTab = 'umumiy';
 var toastTimer = null;
+var syncInterval = null; // Avtomatik sinxronlash uchun
 
 function fS(n) { return Math.round(n).toLocaleString('uz-UZ') + " so'm"; }
 function f$(n) { return '$' + (+n).toFixed(2); }
@@ -464,7 +466,9 @@ function defaultMahsulotlar() {
 }
 
 function initStorage() {
-  setSyncStatus('ok');
+  setSyncStatus('loading');
+  
+  // Avval localStorage dan yuklash
   try {
     var m = localStorage.getItem('td-mahsulotlar');
     var k = localStorage.getItem('td-kunliklar');
@@ -475,7 +479,36 @@ function initStorage() {
   } catch(e) {
     mahsulotlar = defaultMahsulotlar(); kunliklar = []; xarajatlar = [];
   }
+  
   renderAll();
+  
+  // Firebase sozlangan bo'lsa, avtomatik sinxronlash
+  if (FB_URL && FB_KEY && FB_URL !== FB_URL_DEFAULT) {
+    loadFromFirebase(function(ok){
+      if (ok) {
+        console.log('✓ Firebase dan yuklandi');
+        renderAll();
+      } else {
+        console.log('⚠ Firebase ulanmadi, localStorage ishlatilmoqda');
+      }
+    });
+    
+    // Har 30 sekundda avtomatik sinxronlash (faqat Firebase sozlangan bo'lsa)
+    if (syncInterval) clearInterval(syncInterval);
+    syncInterval = setInterval(function(){
+      if (FB_URL && FB_KEY) {
+        console.log('🔄 Avtomatik sinxronlash...');
+        loadFromFirebase(function(ok){
+          if (ok) {
+            renderAll();
+            console.log('✓ Avtomatik yangilandi');
+          }
+        });
+      }
+    }, 30000); // 30 sekund
+  } else {
+    setSyncStatus('ok');
+  }
 }
 
 // Firebase config — URL va KEY kodga yozilgan (har qurilmada ishlaydi)
@@ -494,24 +527,29 @@ function saveData() {
   } catch(e) {}
 
   if (FB_URL && FB_KEY) {
-    // Firebase REST API orqali saqlash
+    // Firebase REST API orqali saqlash - auth parametri bilan
     var data = {
       mahsulotlar: mahsulotlar.reduce(function(o,m){o[m.id]=m;return o;},{}),
       kunliklar:   kunliklar.reduce(function(o,k){o[k.id]=k;return o;},{}),
       xarajatlar:  xarajatlar.reduce(function(o,x){o[x.id]=x;return o;},{})
     };
     var saveUrls = [
-      'https://target-dashbord-default-rtdb.firebaseio.com/td.json',
-      'https://target-dashbord-default-rtdb.us-central1.firebasedatabase.app/td.json',
+      FB_URL + '/td.json?auth=' + FB_KEY,
+      'https://target-dashbord-default-rtdb.us-central1.firebasedatabase.app/td.json?auth=' + FB_KEY,
     ];
     function trySave(i) {
-      if (i >= saveUrls.length) { setSyncStatus('err'); showToast('⚠ Firebase xatosi', true); return; }
+      if (i >= saveUrls.length) { 
+        // Firebase ishlamasa ham, localStorage ishladi - OK
+        setSyncStatus('ok'); 
+        showToast('✓ Saqlandi (faqat qurilmada)', true); 
+        return; 
+      }
       fetch(saveUrls[i], {
         method: 'PUT',
         headers: {'Content-Type':'application/json'},
         body: JSON.stringify(data)
       }).then(function(r){
-        if(r.ok){ setSyncStatus('ok'); showToast('✓ Saqlandi'); }
+        if(r.ok){ setSyncStatus('ok'); showToast('✓ Firebase ga saqlandi'); }
         else { trySave(i+1); }
       }).catch(function(){ trySave(i+1); });
     }
@@ -529,7 +567,9 @@ function loadFromFirebase(cb) {
   }, 6000);
 
   function tryFetch(url) {
-    return fetch(url, {method:'GET', mode:'cors'})
+    // Auth parametri bilan so'rov
+    var urlWithAuth = url + (url.indexOf('?') === -1 ? '?' : '&') + 'auth=' + FB_KEY;
+    return fetch(urlWithAuth, {method:'GET', mode:'cors'})
       .then(function(r){
         if (!r.ok) throw new Error(r.status);
         return r.json();
@@ -537,7 +577,7 @@ function loadFromFirebase(cb) {
   }
 
   var urls = [
-    'https://target-dashbord-default-rtdb.firebaseio.com/td.json',
+    FB_URL + '/td.json',
     'https://target-dashbord-default-rtdb.us-central1.firebasedatabase.app/td.json',
   ];
 
@@ -1153,7 +1193,35 @@ function saveFbCfg() {
   localStorage.setItem('fb-key', FB_KEY);
   document.getElementById('fb-modal').style.display = 'none';
   showToast('✓ Firebase sozlandi!');
+  
+  // Ma'lumotlarni Firebase ga yuklash
   saveData();
+  
+  // Avtomatik sinxronlashni yoqish
+  if (syncInterval) clearInterval(syncInterval);
+  syncInterval = setInterval(function(){
+    if (FB_URL && FB_KEY) {
+      console.log('🔄 Avtomatik sinxronlash...');
+      loadFromFirebase(function(ok){
+        if (ok) {
+          renderAll();
+          console.log('✓ Avtomatik yangilandi');
+        }
+      });
+    }
+  }, 30000);
+  
+  // Darhol birinchi marta sinxronlash
+  setTimeout(function(){
+    loadFromFirebase(function(ok){
+      if (ok) {
+        renderAll();
+        showToast('✓ Firebase bilan sinxronlandi!');
+      } else {
+        showToast('⚠ Firebase ulanmadi', true);
+      }
+    });
+  }, 500);
 }
 
 function syncNow() {
