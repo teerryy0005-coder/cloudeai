@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Target Dashboard - To'liq</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#f5f6fa;--bg2:#fff;--bg3:#f0f1f7;--border:rgba(0,0,0,0.07);--border2:rgba(0,0,0,0.13);--text:#1a1b2e;--muted:#9ea3bf;--muted2:#6b6e8f;--gold:#d4860a;--green:#059669;--red:#dc2626;--blue:#2563eb;--teal:#0891b2}
+body{font-family:'DM Sans',sans-serif;color:var(--text);font-size:14px;background:var(--bg);min-height:100vh}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.5rem;background:#fff;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;gap:1rem;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:.5rem;font-family:'Space Mono',monospace;font-weight:700;font-size:1rem}
+.logo span{color:var(--gold)}
+.sync-pill{display:flex;align-items:center;gap:.4rem;background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:.3rem .7rem;font-size:.7rem;cursor:pointer}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:var(--muted)}
+.sync-dot.ok{background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.nav-tabs{display:flex;gap:.25rem;background:var(--bg3);border-radius:10px;padding:3px}
+.nav-tab{padding:.4rem 1rem;border-radius:8px;border:none;cursor:pointer;font-size:.82rem;font-weight:600;background:transparent;color:var(--muted2);transition:all .2s}
+.nav-tab.active{background:var(--gold);color:#000}
+.btn{background:var(--gold);color:#000;border:none;border-radius:8px;padding:.5rem 1rem;font-size:.82rem;font-weight:700;cursor:pointer}
+main{padding:1.5rem;max-width:1600px;margin:0 auto}
+.panel{display:none}
+.panel.active{display:block}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;margin-bottom:1.5rem}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:1rem;position:relative;overflow:hidden}
+.card-accent{position:absolute;top:0;left:0;right:0;height:2px}
+.card-label{font-size:.65rem;font-weight:600;color:var(--muted2);text-transform:uppercase;margin-bottom:.4rem}
+.card-val{font-family:'Space Mono',monospace;font-size:1.25rem;font-weight:700}
+.card-sub{font-size:.7rem;color:var(--muted);margin-top:.25rem}
+.twrap{background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow-x:auto;margin-bottom:1.5rem}
+table{width:100%;border-collapse:collapse;min-width:1200px}
+thead{background:var(--bg3)}
+th{padding:.6rem .8rem;text-align:left;font-size:.63rem;text-transform:uppercase;font-weight:700;color:var(--muted2);border-bottom:1px solid var(--border)}
+td{padding:.7rem .8rem;font-size:.82rem;border-bottom:1px solid rgba(0,0,0,.04)}
+tr:last-child td{border-bottom:none}
+tbody tr:hover{background:rgba(0,0,0,.02)}
+.tfoot-row td{background:var(--bg3);font-weight:700;border-top:2px solid var(--border2);padding:.8rem}
+.mono{font-family:'Space Mono',monospace;font-size:.76rem}
+.bold{font-weight:700}
+.badge{display:inline-flex;padding:.18rem .5rem;border-radius:6px;font-size:.7rem;font-weight:700;font-family:'Space Mono',monospace}
+.bg-g{background:rgba(5,150,105,.12);color:var(--green)}
+.bg-y{background:rgba(180,83,9,.1);color:#b45309}
+.bg-r{background:rgba(220,38,38,.12);color:var(--red)}
+.c-gold{color:var(--gold)}.c-green{color:var(--green)}.c-red{color:var(--red)}.c-blue{color:var(--blue)}.c-teal{color:var(--teal)}.c-yellow{color:#b45309}
+.fsec{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:1.5rem;margin-bottom:1.25rem}
+.fsec-title{font-size:.9rem;font-weight:700;margin-bottom:1rem}
+.fgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.85rem;margin-bottom:1rem}
+.fg label{display:block;font-size:.68rem;font-weight:600;color:var(--muted2);text-transform:uppercase;margin-bottom:.35rem}
+.fg input,.fg select{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:.55rem .75rem;font-size:.88rem;outline:none}
+.fg input:focus,.fg select:focus{border-color:var(--gold)}
+.btn-del{background:rgba(220,38,38,.1);color:var(--red);border:1px solid rgba(220,38,38,.2);border-radius:6px;padding:.25rem .6rem;font-size:.75rem;cursor:pointer}
+.toast{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--bg2);border:2px solid var(--green);border-radius:10px;padding:.75rem 1.25rem;font-size:.85rem;font-weight:600;color:var(--green);transform:translateY(80px);opacity:0;transition:all .3s;z-index:200}
+.toast.show{transform:translateY(0);opacity:1}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:500;display:none;align-items:center;justify-content:center;padding:1rem}
+.modal-overlay.show{display:flex}
+.modal{background:var(--bg2);border-radius:12px;padding:2rem;width:100%;max-width:500px}
+.modal h3{font-size:1.1rem;font-weight:700;margin-bottom:1rem}
+.modal-btns{display:flex;gap:.75rem;margin-top:1.5rem}
+.btn-outline{background:transparent;border:1px solid var(--border2);border-radius:8px;padding:.55rem 1.1rem;font-size:.82rem;font-weight:600;cursor:pointer}
+.taxmin-input{width:60px;background:rgba(8,145,178,.1);border:1px solid rgba(8,145,178,.3);border-radius:6px;padding:.2rem .4rem;font-size:.76rem;font-family:'Space Mono',monospace;font-weight:700;color:var(--teal);text-align:center;outline:none}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="logo">📊 Target <span>Pro</span></div>
+  <div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap">
+    <div class="sync-pill" onclick="openModal()">
+      <div class="sync-dot" id="dot"></div>
+      <span id="txt">Ready</span>
+    </div>
+    <div class="nav-tabs">
+      <button class="nav-tab active" onclick="switchTab('umumiy',this)">Umumiy</button>
+      <button class="nav-tab" onclick="switchTab('kunlik',this)">Kunlik</button>
+      <button class="nav-tab" onclick="switchTab('qosh',this)">+ Qo'shish</button>
+    </div>
+  </div>
+</div>
+
+<main>
+<div class="panel active" id="panel-umumiy">
+  <h2 style="margin-bottom:1rem">📊 Umumiy statistika</h2>
+  <div class="cards" id="cards"></div>
+  <div class="twrap">
+    <table>
+      <thead><tr>
+        <th>📦 Mahsulot</th><th>💰 Xarajat($)</th><th>👥 Lid</th><th>⭐ Sifatli</th><th>📋 Qabul</th>
+        <th>🚚 Yetkazilgan</th><th>❌ Qaytgan</th><th>🚛 Yo'lda</th><th>💵 Lid $</th><th>💸 Komissiya</th>
+        <th>💰 Daromad</th><th>💎 Foyda</th><th>📊 ROI</th><th>🎯 Taxmin%</th><th>🔮 Tax.foyda</th>
+      </tr></thead>
+      <tbody id="tbody"></tbody>
+      <tfoot id="tfoot"></tfoot>
+    </table>
+  </div>
+</div>
+
+<div class="panel" id="panel-kunlik">
+  <h2 style="margin-bottom:1rem">📅 Kunlik</h2>
+  <div class="twrap">
+    <table>
+      <thead><tr>
+        <th>📅 Sana</th><th>📦 Mahsulot</th><th>💰 Xarajat($)</th><th>👥 Lid</th><th>⭐ Sifatli</th>
+        <th>📋 Qabul</th><th>🚚 Yetkazilgan</th><th>❌ Qaytgan</th><th>🚛 Yo'lda</th>
+        <th>💰 Daromad</th><th>💎 Foyda</th><th>🗑</th>
+      </tr></thead>
+      <tbody id="ktbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="panel" id="panel-qosh">
+  <div class="fsec">
+    <div class="fsec-title">📦 Mahsulot qo'shish</div>
+    <div class="fgrid">
+      <div class="fg"><label>Nomi</label><input id="p-nom" placeholder="Pheramone"></div>
+      <div class="fg"><label>Narxi</label><input type="number" id="p-narx" placeholder="69000"></div>
+      <div class="fg"><label>Komissiya</label><input type="number" id="p-kom" placeholder="30000"></div>
+    </div>
+    <button class="btn" onclick="addMahsulot()">+ Qo'shish</button>
+  </div>
+  
+  <div class="fsec">
+    <div class="fsec-title">📅 Kunlik kiritish</div>
+    <div class="fgrid">
+      <div class="fg"><label>Sana</label><input type="date" id="k-sana"></div>
+      <div class="fg"><label>Mahsulot</label><select id="k-mah"><option>Tanlang</option></select></div>
+      <div class="fg"><label>Xarajat($)</label><input type="number" id="k-xar" placeholder="5.5"></div>
+      <div class="fg"><label>Lid</label><input type="number" id="k-lid" placeholder="20"></div>
+      <div class="fg"><label>Sifatli</label><input type="number" id="k-sif" placeholder="15"></div>
+      <div class="fg"><label>Qabul</label><input type="number" id="k-qab" placeholder="10"></div>
+      <div class="fg"><label>Yetkazilgan</label><input type="number" id="k-yet" placeholder="8"></div>
+      <div class="fg"><label>Qaytgan</label><input type="number" id="k-qay" placeholder="1"></div>
+    </div>
+    <button class="btn" onclick="addKunlik()">+ Qo'shish</button>
+  </div>
+  
+  <div class="fsec">
+    <div class="fsec-title">📋 Mahsulotlar</div>
+    <div class="twrap" style="margin:0">
+      <table><thead><tr><th>Nom</th><th>Narx</th><th>Kom</th><th></th></tr></thead>
+      <tbody id="mlist"></tbody></table>
+    </div>
+  </div>
+</div>
+</main>
+
+<div class="toast" id="toast">✓</div>
+
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h3>🔥 Firebase & Import/Export</h3>
+    <div class="fg"><label>Database URL</label>
+    <input id="fb-url" placeholder="https://project-default-rtdb.firebaseio.com"></div>
+    <div class="modal-btns">
+      <button class="btn" onclick="saveFB()">✓ Ulanish</button>
+      <button class="btn-outline" onclick="closeModal()">Bekor</button>
+    </div>
+    <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border);display:flex;gap:.5rem">
+      <button class="btn-outline" onclick="exportData()">📤 Eksport</button>
+      <label class="btn-outline" style="margin:0;cursor:pointer">
+        📥 Import <input type="file" accept=".json" onchange="importData(event)" style="display:none">
+      </label>
+    </div>
+  </div>
+</div>
+
+<script>
+const USD=12300;
+let data={m:[],k:[],fb:''};
+let timer=null;
+
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500)}
+function setDot(s){const d=document.getElementById('dot'),t=document.getElementById('txt');d.className='sync-dot';if(s==='ok'){d.classList.add('ok');t.textContent='Saqlandi'}else t.textContent='Yuklanmoqda'}
+function fS(n){return Math.round(n).toLocaleString('uz-UZ')+" so'm"}
+function f$(n){return '$'+(+n).toFixed(2)}
+function fP(n){return(+n).toFixed(1)+'%'}
+function roiC(r){return r>=50?'bg-g':r>=0?'bg-y':'bg-r'}
+
+function switchTab(t,el){
+  document.querySelectorAll('.nav-tab').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('panel-'+t).classList.add('active');
+  if(t==='umumiy')renderU();
+  if(t==='kunlik')renderK();
+  if(t==='qosh')renderQ();
+}
+
+function openModal(){document.getElementById('modal').classList.add('show');document.getElementById('fb-url').value=data.fb||''}
+function closeModal(){document.getElementById('modal').classList.remove('show')}
+
+function save(){
+  setDot('saving');
+  try{localStorage.setItem('td-complete',JSON.stringify(data));console.log('✅ Saqlandi')}catch(e){console.error(e)}
+  if(data.fb)saveFB2();else setDot('ok')
+}
+
+function load(){
+  setDot('loading');
+  try{const s=localStorage.getItem('td-complete');if(s)data=JSON.parse(s)}catch(e){}
+  if(!data.m||data.m.length===0){
+    data.m=[{id:1,nom:'Pheramone 21+',narx:69000,kom:30000,tx:0},{id:2,nom:'Fraink',narx:77000,kom:30000,tx:0}];
+    data.k=[
+      {id:1001,sana:new Date().toISOString().split('T')[0],mid:1,xar:5.5,lid:25,sif:20,qab:12,yet:8,qay:2},
+      {id:1002,sana:new Date().toISOString().split('T')[0],mid:2,xar:8,lid:40,sif:35,qab:18,yet:12,qay:3}
+    ];
+    save()
+  }
+  renderU();renderK();renderQ();setDot('ok');
+  if(data.fb)loadFB()
+}
+
+function saveFB2(){
+  if(!data.fb)return;
+  fetch(data.fb+'/tdComplete.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({m:data.m,k:data.k,t:Date.now()})})
+  .then(r=>{if(r.ok){setDot('ok');toast('✅ Firebase')}else{setDot('ok')}})
+  .catch(()=>setDot('ok'))
+}
+
+function loadFB(){
+  if(!data.fb)return;
+  fetch(data.fb+'/tdComplete.json')
+  .then(r=>r.json())
+  .then(d=>{if(d&&d.m&&d.k){data.m=d.m;data.k=d.k;localStorage.setItem('td-complete',JSON.stringify(data));renderU();renderK();renderQ();toast('✅ FB sync')}})
+  .catch(e=>console.error(e))
+}
+
+function saveFB(){
+  const url=document.getElementById('fb-url').value.trim();
+  if(!url){alert('⚠ URL!');return}
+  if(!url.includes('firebaseio.com')&&!url.includes('firebasedatabase.app')){alert('⚠ Noto\'g\'ri URL!');return}
+  data.fb=url;save();saveFB2();
+  setTimeout(()=>{loadFB();closeModal();if(timer)clearInterval(timer);timer=setInterval(()=>loadFB(),30000);toast('✅ Ulandi')},1000)
+}
+
+function exportData(){
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='target-'+new Date().toISOString().split('T')[0]+'.json';
+  a.click();
+  toast('📤 Eksport')
+}
+
+function importData(e){
+  const f=e.target.files[0];
+  if(!f)return;
+  const r=new FileReader();
+  r.onload=x=>{
+    try{
+      const imp=JSON.parse(x.target.result);
+      if(!imp.m||!imp.k){alert('⚠ Noto\'g\'ri format!');return}
+      const act=confirm(`Import:\nMahsulot: ${imp.m.length}\nKunlik: ${imp.k.length}\n\nOK=Qo\'shish Cancel=Almashtir`);
+      if(act){data.m=[...data.m,...imp.m];data.k=[...data.k,...imp.k]}else{data.m=imp.m;data.k=imp.k}
+      if(imp.fb)data.fb=imp.fb;
+      save();renderU();renderK();renderQ();toast('✅ Import');
+      if(data.fb)setTimeout(()=>saveFB2(),500)
+    }catch(err){alert('⚠ Xato: '+err.message);console.error(err)}
+  };
+  r.readAsText(f);
+  e.target.value=''
+}
+
+function renderU(){
+  const by={};
+  data.m.forEach(m=>by[m.id]={id:m.id,nom:m.nom,narx:m.narx,kom:m.kom,tx:m.tx||0,xar:0,lid:0,sif:0,qab:0,yet:0,qay:0});
+  data.k.forEach(k=>{if(by[k.mid]){const p=by[k.mid];p.xar+=k.xar||0;p.lid+=k.lid||0;p.sif+=k.sif||0;p.qab+=k.qab||0;p.yet+=k.yet||0;p.qay+=k.qay||0}});
+
+  let tX=0,tL=0,tS=0,tQ=0,tY=0,tQa=0,tD=0,tF=0,tTx=0;
+  const rows=Object.values(by).filter(m=>m.lid>0||m.xar>0);
+  
+  const tbody=document.getElementById('tbody');
+  tbody.innerHTML=rows.map(m=>{
+    const xS=m.xar*USD,yo=m.qab-m.yet-m.qay,dar=m.yet*m.kom,foy=dar-xS,roi=xS>0?(foy/xS*100):0,lc=m.lid>0?(m.xar/m.lid):0;
+    const txF=m.tx>0?m.tx:(m.qab>0?(m.yet/m.qab*100):0),txY=Math.round(m.qab*txF/100),txD=txY*m.kom,txFoy=txD-xS;
+    tX+=m.xar;tL+=m.lid;tS+=m.sif;tQ+=m.qab;tY+=m.yet;tQa+=m.qay;tD+=dar;tF+=foy;tTx+=txFoy;
+    return`<tr><td class="bold">${m.nom}</td><td class="mono c-yellow">${f$(m.xar)}</td><td class="mono">${m.lid}</td><td class="mono">${m.sif}</td><td class="mono">${m.qab}</td><td class="mono c-green">${m.yet}</td><td class="mono c-red">${m.qay}</td><td class="mono c-blue">${yo}</td><td class="mono c-yellow">${f$(lc)}</td><td class="mono c-blue">${fS(m.kom)}</td><td class="mono c-green">${fS(dar)}</td><td class="mono c-${foy>=0?'green':'red'}">${foy>=0?'+':''}${fS(foy)}</td><td><span class="badge ${roiC(roi)}">${fP(roi)}</span></td><td><input class="taxmin-input" type="number" min="0" max="100" value="${Math.round(txF)}" onchange="updTx(${m.id},this.value)">%</td><td class="mono c-${txFoy>=0?'teal':'red'}" style="font-weight:700">${txFoy>=0?'+':''}${fS(txFoy)}</td></tr>`
+  }).join('')||'<tr><td colspan="15" style="text-align:center;padding:2rem">Ma\'lumot yo\'q</td></tr>';
+
+  const tYo=tQ-tY-tQa,tRoi=tX>0?(tF/(tX*USD)*100):0,tLc=tL>0?(tX/tL):0;
+  document.getElementById('tfoot').innerHTML=rows.length>0?`<tr class="tfoot-row"><td class="bold">JAMI</td><td class="mono c-yellow bold">${f$(tX)}</td><td class="mono bold">${tL}</td><td class="mono bold">${tS}</td><td class="mono bold">${tQ}</td><td class="mono c-green bold">${tY}</td><td class="mono c-red bold">${tQa}</td><td class="mono c-blue bold">${tYo}</td><td class="mono c-yellow bold">${f$(tLc)}</td><td></td><td class="mono c-green bold">${fS(tD)}</td><td class="mono bold c-${tF>=0?'green':'red'}">${tF>=0?'+':''}${fS(tF)}</td><td><span class="badge ${roiC(tRoi)}">${fP(tRoi)}</span></td><td class="c-teal bold">TAX:</td><td class="mono bold c-${tTx>=0?'teal':'red'}">${tTx>=0?'+':''}${fS(tTx)}</td></tr>`:'';
+
+  document.getElementById('cards').innerHTML=`
+  <div class="card"><div class="card-accent" style="background:var(--gold)"></div><div class="card-label">💰 Xarajat</div><div class="card-val c-gold">${f$(tX)}</div><div class="card-sub">${Math.round(tX*USD/1000)}K</div></div>
+  <div class="card"><div class="card-accent" style="background:var(--blue)"></div><div class="card-label">👥 Lid</div><div class="card-val c-blue">${tL}</div><div class="card-sub">${tS} sifatli</div></div>
+  <div class="card"><div class="card-accent" style="background:var(--teal)"></div><div class="card-label">📋 Qabul</div><div class="card-val c-teal">${tQ}</div></div>
+  <div class="card"><div class="card-accent" style="background:var(--green)"></div><div class="card-label">🚚 Yetkazilgan</div><div class="card-val c-green">${tY}</div></div>
+  <div class="card"><div class="card-accent" style="background:var(--red)"></div><div class="card-label">❌ Qaytgan</div><div class="card-val c-red">${tQa}</div></div>
+  <div class="card"><div class="card-accent" style="background:var(--blue)"></div><div class="card-label">🚛 Yo'lda</div><div class="card-val c-blue">${tYo}</div></div>
+  <div class="card"><div class="card-accent" style="background:${tF>=0?'var(--green)':'var(--red)'}"></div><div class="card-label">💎 Sof foyda</div><div class="card-val c-${tF>=0?'green':'red'}">${tF>=0?'+':''}${Math.round(tF/1000)}K</div><div class="card-sub">${fS(tF)}</div></div>
+  <div class="card"><div class="card-accent" style="background:var(--teal)"></div><div class="card-label">🔮 Tax.foyda</div><div class="card-val c-teal">${tTx>=0?'+':''}${Math.round(tTx/1000)}K</div><div class="card-sub">${fS(tTx)}</div></div>
+  <div class="card"><div class="card-accent" style="background:${tRoi>=0?'var(--green)':'var(--red)'}"></div><div class="card-label">📊 ROI</div><div class="card-val c-${tRoi>=0?'green':'red'}">${fP(tRoi)}</div></div>`
+}
+
+function updTx(id,v){const m=data.m.find(x=>x.id===id);if(m){m.tx=Math.min(100,Math.max(0,+v||0));save();renderU()}}
+
+function renderK(){
+  const tbody=document.getElementById('ktbody');
+  if(!data.k.length){tbody.innerHTML='<tr><td colspan="12" style="text-align:center;padding:2rem">Hali kunlik yo\'q</td></tr>';return}
+  const sorted=[...data.k].sort((a,b)=>new Date(b.sana)-new Date(a.sana));
+  tbody.innerHTML=sorted.map(k=>{
+    const m=data.m.find(x=>x.id===k.mid),nom=m?m.nom:'N/A',kom=m?m.kom:0;
+    const xS=k.xar*USD,yo=k.qab-k.yet-k.qay,dar=k.yet*kom,foy=dar-xS;
+    return`<tr><td class="mono c-gold">${k.sana}</td><td class="bold">${nom}</td><td class="mono c-yellow">${f$(k.xar)}</td><td class="mono">${k.lid}</td><td class="mono">${k.sif}</td><td class="mono">${k.qab}</td><td class="mono c-green">${k.yet}</td><td class="mono c-red">${k.qay}</td><td class="mono c-blue">${yo}</td><td class="mono c-green">${fS(dar)}</td><td class="mono c-${foy>=0?'green':'red'}">${foy>=0?'+':''}${fS(foy)}</td><td><button class="btn-del" onclick="delK(${k.id})">✕</button></td></tr>`
+  }).join('')
+}
+
+function renderQ(){
+  const ml=document.getElementById('mlist');
+  ml.innerHTML=data.m.length===0?'<tr><td colspan="4" style="text-align:center;padding:1rem">Mahsulot yo\'q</td></tr>':
+    data.m.map(m=>`<tr><td class="bold">${m.nom}</td><td class="mono c-yellow">${fS(m.narx)}</td><td class="mono c-green">${fS(m.kom)}</td><td><button class="btn-del" onclick="delM(${m.id})">✕</button></td></tr>`).join('');
+  const sel=document.getElementById('k-mah');
+  sel.innerHTML='<option value="">Tanlang</option>'+data.m.map(m=>`<option value="${m.id}">${m.nom}</option>`).join('');
+  if(!document.getElementById('k-sana').value)document.getElementById('k-sana').value=new Date().toISOString().split('T')[0]
+}
+
+function addMahsulot(){
+  const nom=document.getElementById('p-nom').value.trim(),narx=+document.getElementById('p-narx').value||0,kom=+document.getElementById('p-kom').value||0;
+  if(!nom||!kom){alert('⚠ Nom va komissiya!');return}
+  data.m.push({id:Date.now(),nom,narx,kom,tx:0});
+  document.getElementById('p-nom').value='';document.getElementById('p-narx').value='';document.getElementById('p-kom').value='';
+  save();renderQ();toast('✅ Qo\'shildi')
+}
+
+function addKunlik(){
+  const sana=document.getElementById('k-sana').value,mid=+document.getElementById('k-mah').value,xar=+document.getElementById('k-xar').value||0;
+  const lid=+document.getElementById('k-lid').value||0,sif=+document.getElementById('k-sif').value||lid,qab=+document.getElementById('k-qab').value||0;
+  const yet=+document.getElementById('k-yet').value||0,qay=+document.getElementById('k-qay').value||0;
+  if(!sana||!mid||!xar||!lid){alert('⚠ Sana, mahsulot, xarajat, lid!');return}
+  data.k.push({id:Date.now(),sana,mid,xar,lid,sif,qab,yet,qay});
+  ['k-xar','k-lid','k-sif','k-qab','k-yet','k-qay'].forEach(id=>document.getElementById(id).value='');
+  save();renderU();toast('✅ Qo\'shildi')
+}
+
+function delM(id){if(!confirm('O\'chirish?'))return;data.m=data.m.filter(m=>m.id!==id);save();renderQ();renderU();toast('🗑')}
+function delK(id){if(!confirm('O\'chirish?'))return;data.k=data.k.filter(k=>k.id!==id);save();renderK();renderU();toast('🗑')}
+
+console.log('🚀 Target Dashboard Complete');
+load();
+setInterval(()=>save(),120000);
+console.log('✅ Ready');
+</script>
+</body>
+</html>
