@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Target Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f5f6fa;--bg2:#ffffff;--bg3:#f0f1f7;--bg4:#e8e9f3;
+  --border:rgba(0,0,0,0.07);--border2:rgba(0,0,0,0.13);
+  --text:#1a1b2e;--muted:#9ea3bf;--muted2:#6b6e8f;
+  --gold:#d4860a;--gold2:#f5a623;--green:#059669;
+  --red:#dc2626;--blue:#2563eb;--purple:#7c3aed;--yellow:#b45309;
+  --teal:#0891b2;
+}
+html,body{min-height:100vh;background:var(--bg)}
+body{font-family:'DM Sans',sans-serif;color:var(--text);font-size:14px;overflow-x:hidden}
+.shell{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.75rem;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;gap:1rem;flex-wrap:wrap;}
+.logo{display:flex;align-items:center;gap:.65rem}
+.logo-icon{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--gold2),var(--gold));display:flex;align-items:center;justify-content:center;font-size:1rem}
+.logo-text{font-family:'Space Mono',monospace;font-size:.95rem;font-weight:700;letter-spacing:-.02em}
+.logo-text span{color:var(--gold)}
+.topbar-right{display:flex;align-items:center;gap:.75rem;flex-wrap:wrap}
+.sync-pill{display:flex;align-items:center;gap:.45rem;background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:.3rem .75rem;font-family:'Space Mono',monospace;font-size:.68rem;color:var(--muted2);cursor:pointer}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:var(--muted);transition:background .3s}
+.sync-dot.ok{background:var(--green);box-shadow:0 0 8px rgba(5,150,105,.3);animation:pulse 2s infinite}
+.sync-dot.saving{background:var(--yellow);animation:pulse .6s infinite}
+.sync-dot.err{background:var(--red)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.btn{background:var(--gold);color:#000;border:none;border-radius:8px;padding:.65rem 1.4rem;font-family:'DM Sans',sans-serif;font-size:.88rem;font-weight:700;cursor:pointer;transition:all .2s}
+.btn:hover{opacity:.88;transform:translateY(-1px)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+main{flex:1;padding:1.75rem;max-width:1400px;margin:0 auto;width:100%}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:1.75rem}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:1.25rem;position:relative;overflow:hidden}
+
+.card-accent{position:absolute;top:0;left:0;right:0;height:2px}
+.card-label{font-size:.65rem;font-weight:600;color:var(--muted2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem}
+.card-val{font-family:'Space Mono',monospace;font-size:1.4rem;font-weight:700;line-height:1}
+.card-sub{font-size:.7rem;color:var(--muted);margin-top:.3rem}
+.twrap{background:var(--bg2);border:1px solid var(--border);border-radius:14px;overflow:hidden;overflow-x:auto;margin-bottom:1.5rem}
+table{width:100%;border-collapse:collapse;min-width:900px}
+thead tr{background:var(--bg3)}
+th{padding:.65rem .9rem;text-align:left;font-size:.63rem;text-transform:uppercase;letter-spacing:.09em;color:var(--muted2);font-weight:700;white-space:nowrap;border-bottom:1px solid var(--border)}
+td{padding:.75rem .9rem;font-size:.84rem;border-bottom:1px solid rgba(0,0,0,.04);white-space:nowrap}
+tr:last-child td{border-bottom:none}
+tbody tr:hover{background:rgba(0,0,0,.02)}
+.mono{font-family:'Space Mono',monospace;font-size:.76rem}
+.bold{font-weight:700}
+.c-gold{color:var(--gold)}.c-green{color:var(--green)}.c-red{color:var(--red)}.c-blue{color:var(--blue)}.c-yellow{color:var(--yellow)}.c-muted{color:var(--muted2)}
+.toast{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--bg2);border:2px solid var(--green);border-radius:10px;padding:.75rem 1.25rem;font-size:.85rem;font-weight:600;color:var(--green);box-shadow:0 4px 12px rgba(0,0,0,.1);transform:translateY(80px);opacity:0;transition:all .3s;z-index:200}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.warn{border-color:var(--yellow);color:var(--yellow)}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:500;display:none;align-items:center;justify-content:center;padding:1rem}
+.modal-overlay.show{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:14px;padding:2rem;width:100%;max-width:500px;box-shadow:0 20px 60px rgba(0,0,0,.15);animation:fadeIn .2s}
+@keyframes fadeIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+.modal h3{font-size:1.1rem;font-weight:700;margin-bottom:1rem}
+.modal p{font-size:.85rem;color:var(--muted2);line-height:1.6;margin-bottom:1.25rem}
+.fg{margin-bottom:1rem}
+.fg label{display:block;font-size:.7rem;font-weight:600;color:var(--muted2);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.4rem}
+.fg input,.fg select{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:.6rem .85rem;font-size:.9rem;color:var(--text);font-family:'DM Sans',sans-serif;outline:none;transition:all .2s}
+.fg input:focus,.fg select:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(245,166,35,.12)}
+.modal-btns{display:flex;gap:.75rem;margin-top:1.5rem}
+.btn-outline{background:transparent;color:var(--text);border:1px solid var(--border2);border-radius:8px;padding:.6rem 1.2rem;font-family:'DM Sans',sans-serif;font-size:.88rem;font-weight:600;cursor:pointer;transition:all .2s}
+.btn-outline:hover{border-color:var(--gold);color:var(--gold)}
+code{background:var(--bg3);padding:2px 6px;border-radius:4px;font-family:'Space Mono',monospace;font-size:.8rem;color:var(--purple)}
+
+</style>
+</head>
+<body>
+<div class="shell">
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-icon">📊</div>
+    <div class="logo-text">Target <span>Dashboard</span></div>
+  </div>
+  <div class="topbar-right">
+    <div class="sync-pill" onclick="openFirebaseModal()">
+      <div class="sync-dot" id="sync-dot"></div>
+      <span id="sync-txt">Yuklanmoqda...</span>
+    </div>
+    <button class="btn" onclick="openFirebaseModal()">🔥 Firebase</button>
+    <button class="btn" onclick="exportData()">📤 Eksport</button>
+    <label class="btn" style="margin:0">
+      📥 Import <input type="file" accept=".json" onchange="importData(event)" style="display:none">
+    </label>
+  </div>
+</div>
+
+<main>
+  <h2 style="font-size:1.3rem;font-weight:700;margin-bottom:1.5rem">📊 Umumiy statistika</h2>
+  
+  <div class="cards" id="stats-cards">
+    <div class="card">
+      <div class="card-accent" style="background:var(--gold)"></div>
+      <div class="card-label">💰 Jami xarajat</div>
+      <div class="card-val c-gold">$0</div>
+    </div>
+  </div>
+
+  <div class="twrap">
+    <table>
+      <thead>
+        <tr>
+          <th>📦 Mahsulot</th>
+          <th>💰 Xarajat ($)</th>
+          <th>👥 Lid</th>
+          <th>📋 Qabul</th>
+          <th>🚚 Yetkazilgan</th>
+          <th>💎 Daromad</th>
+          <th>📊 ROI</th>
+        </tr>
+      </thead>
+      <tbody id="data-table">
+        <tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--muted)">Ma'lumot yo'q</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div style="margin-top:2rem;padding:1.5rem;background:var(--bg2);border:1px solid var(--border);border-radius:14px">
+    <h3 style="font-size:1rem;font-weight:700;margin-bottom:1rem">➕ Yangi ma'lumot qo'shish</h3>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1rem;margin-bottom:1rem">
+      <div class="fg"><label>Mahsulot nomi</label><input id="new-product" placeholder="Mahsulot"></div>
+      <div class="fg"><label>Xarajat ($)</label><input type="number" id="new-cost" placeholder="100"></div>
+      <div class="fg"><label>Lid</label><input type="number" id="new-leads" placeholder="50"></div>
+      <div class="fg"><label>Qabul</label><input type="number" id="new-accepted" placeholder="25"></div>
+      <div class="fg"><label>Yetkazilgan</label><input type="number" id="new-delivered" placeholder="20"></div>
+      <div class="fg"><label>Daromad ($)</label><input type="number" id="new-revenue" placeholder="500"></div>
+    </div>
+    <button class="btn" onclick="addData()">✅ Qo'shish</button>
+  </div>
+</main>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">✓ Saqlandi</div>
+
+<!-- Firebase Modal -->
+<div class="modal-overlay" id="firebase-modal">
+  <div class="modal">
+    <h3>🔥 Firebase Sinxronizatsiya</h3>
+    <p>Boshqa qurilmalarda ham ma'lumotlarni ko'rish uchun Firebase'ga ulaning.</p>
+    
+    <div style="background:var(--bg3);padding:1rem;border-radius:8px;margin-bottom:1rem">
+      <p style="font-size:.8rem;margin-bottom:.5rem"><b>📋 Tezkor sozlash:</b></p>
+      <ol style="font-size:.75rem;line-height:1.8;padding-left:1.2rem;color:var(--muted2)">
+        <li><a href="https://console.firebase.google.com" target="_blank" style="color:var(--blue)">console.firebase.google.com</a> → Add project</li>
+        <li>Realtime Database → Create → <b style="color:var(--green)">Test mode</b></li>
+        <li>Rules: <code style="font-size:.7rem">{".read":true,".write":true}</code></li>
+        <li>URL ni ko'chirib quyiga kiriting</li>
+      </ol>
+    </div>
+
+    <div class="fg">
+      <label>🔗 Database URL</label>
+      <input id="fb-url" placeholder="https://your-project-default-rtdb.firebaseio.com">
+    </div>
+
+    <div class="modal-btns">
+      <button class="btn" onclick="saveFirebase()">✓ Ulanish</button>
+      <button class="btn-outline" onclick="closeFirebaseModal()">Bekor</button>
+    </div>
+  </div>
+</div>
+
+<script>
+
+// ========================================
+// 💾 DATA STORAGE
+// ========================================
+let appData = {
+  items: [],
+  firebaseUrl: ''
+};
+
+let syncTimer = null;
+
+// ========================================
+// 🎨 UI FUNCTIONS
+// ========================================
+function showToast(msg, warn = false) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.className = 'toast show' + (warn ? ' warn' : '');
+  clearTimeout(window.toastTimer);
+  window.toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+function setSyncStatus(status) {
+  const dot = document.getElementById('sync-dot');
+  const txt = document.getElementById('sync-txt');
+  dot.className = 'sync-dot';
+  
+  if (status === 'ok') {
+    dot.classList.add('ok');
+    txt.textContent = 'Saqlandi ✓';
+  } else if (status === 'saving') {
+    dot.classList.add('saving');
+    txt.textContent = 'Saqlanmoqda...';
+  } else if (status === 'error') {
+    dot.classList.add('err');
+    txt.textContent = 'Xato!';
+  } else if (status === 'loading') {
+    dot.classList.add('saving');
+    txt.textContent = 'Yuklanmoqda...';
+  }
+}
+
+function openFirebaseModal() {
+  document.getElementById('firebase-modal').classList.add('show');
+  document.getElementById('fb-url').value = appData.firebaseUrl || '';
+}
+
+function closeFirebaseModal() {
+  document.getElementById('firebase-modal').classList.remove('show');
+}
+
+// ========================================
+// 📊 DATA RENDERING
+// ========================================
+function renderData() {
+  console.log('📊 Rendering data:', appData.items.length, 'items');
+  
+  // Cards
+  const totalCost = appData.items.reduce((sum, item) => sum + (item.cost || 0), 0);
+  const totalLeads = appData.items.reduce((sum, item) => sum + (item.leads || 0), 0);
+  const totalDelivered = appData.items.reduce((sum, item) => sum + (item.delivered || 0), 0);
+  const totalRevenue = appData.items.reduce((sum, item) => sum + (item.revenue || 0), 0);
+  const totalProfit = totalRevenue - totalCost;
+  const roi = totalCost > 0 ? ((totalProfit / totalCost) * 100) : 0;
+
+
+  document.getElementById('stats-cards').innerHTML = `
+    <div class="card">
+      <div class="card-accent" style="background:var(--gold)"></div>
+      <div class="card-label">💰 Jami xarajat</div>
+      <div class="card-val c-gold">$${totalCost.toFixed(2)}</div>
+      <div class="card-sub">${appData.items.length} ta yozuv</div>
+    </div>
+    <div class="card">
+      <div class="card-accent" style="background:var(--blue)"></div>
+      <div class="card-label">👥 Jami lid</div>
+      <div class="card-val c-blue">${totalLeads}</div>
+    </div>
+    <div class="card">
+      <div class="card-accent" style="background:var(--green)"></div>
+      <div class="card-label">🚚 Yetkazilgan</div>
+      <div class="card-val c-green">${totalDelivered}</div>
+    </div>
+    <div class="card">
+      <div class="card-accent" style="background:var(--purple)"></div>
+      <div class="card-label">💎 Daromad</div>
+      <div class="card-val c-${totalProfit >= 0 ? 'green' : 'red'}">$${totalRevenue.toFixed(2)}</div>
+    </div>
+    <div class="card">
+      <div class="card-accent" style="background:${roi >= 0 ? 'var(--green)' : 'var(--red)'}"></div>
+      <div class="card-label">📊 ROI</div>
+      <div class="card-val c-${roi >= 0 ? 'green' : 'red'}">${roi.toFixed(1)}%</div>
+      <div class="card-sub">${totalProfit >= 0 ? '+' : ''}$${totalProfit.toFixed(2)}</div>
+    </div>
+  `;
+
+  // Table
+  const tbody = document.getElementById('data-table');
+  if (appData.items.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--muted)">📭 Hali ma\'lumot yo\'q. Pastda "Qo\'shish" tugmasini bosing.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = appData.items.map((item, idx) => {
+    const profit = (item.revenue || 0) - (item.cost || 0);
+    const itemRoi = item.cost > 0 ? ((profit / item.cost) * 100) : 0;
+    return `
+      <tr>
+        <td class="bold">${item.product || 'N/A'}</td>
+        <td class="mono c-yellow">$${(item.cost || 0).toFixed(2)}</td>
+        <td class="mono">${item.leads || 0}</td>
+        <td class="mono">${item.accepted || 0}</td>
+        <td class="mono c-green">${item.delivered || 0}</td>
+        <td class="mono c-blue">$${(item.revenue || 0).toFixed(2)}</td>
+        <td class="mono c-${itemRoi >= 0 ? 'green' : 'red'}">${itemRoi.toFixed(1)}%</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+
+// ========================================
+// ➕ ADD DATA
+// ========================================
+function addData() {
+  const product = document.getElementById('new-product').value.trim();
+  const cost = parseFloat(document.getElementById('new-cost').value) || 0;
+  const leads = parseInt(document.getElementById('new-leads').value) || 0;
+  const accepted = parseInt(document.getElementById('new-accepted').value) || 0;
+  const delivered = parseInt(document.getElementById('new-delivered').value) || 0;
+  const revenue = parseFloat(document.getElementById('new-revenue').value) || 0;
+
+  if (!product) {
+    alert('⚠ Mahsulot nomini kiriting!');
+    return;
+  }
+
+  const newItem = {
+    id: Date.now(),
+    product,
+    cost,
+    leads,
+    accepted,
+    delivered,
+    revenue,
+    date: new Date().toISOString()
+  };
+
+  appData.items.push(newItem);
+  console.log('✅ Yangi ma\'lumot qo\'shildi:', newItem);
+
+  // Clear inputs
+  ['new-product', 'new-cost', 'new-leads', 'new-accepted', 'new-delivered', 'new-revenue'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+
+  saveData();
+  renderData();
+  showToast('✅ Qo\'shildi!');
+}
+
+// ========================================
+// 💾 SAVE & LOAD
+// ========================================
+function saveData() {
+  setSyncStatus('saving');
+  
+  // Save to localStorage
+  try {
+    localStorage.setItem('td-data', JSON.stringify(appData));
+    console.log('✅ localStorage ga saqlandi');
+  } catch (e) {
+    console.error('❌ localStorage xato:', e);
+  }
+
+  // Save to Firebase
+  if (appData.firebaseUrl) {
+    saveToFirebase();
+  } else {
+    setSyncStatus('ok');
+  }
+}
+
+function loadData() {
+  setSyncStatus('loading');
+  console.log('🔄 Ma\'lumotlar yuklanmoqda...');
+
+  // Load from localStorage
+  try {
+    const saved = localStorage.getItem('td-data');
+    if (saved) {
+      appData = JSON.parse(saved);
+      console.log('✅ localStorage dan yuklandi:', appData.items.length, 'items');
+    }
+  } catch (e) {
+    console.error('❌ localStorage xato:', e);
+  }
+
+  // Load demo data if empty
+  if (!appData.items || appData.items.length === 0) {
+    console.log('ℹ Demo ma\'lumotlar yuklanyapti...');
+    appData.items = [
+      {
+        id: 1,
+        product: 'Pheramone 21+',
+        cost: 50,
+        leads: 100,
+        accepted: 45,
+        delivered: 35,
+        revenue: 350,
+        date: new Date().toISOString()
+      },
+      {
+        id: 2,
+        product: 'Fraink 77.000',
+        cost: 80,
+        leads: 150,
+        accepted: 70,
+        delivered: 55,
+        revenue: 550,
+        date: new Date().toISOString()
+      }
+    ];
+    saveData();
+  }
+
+  renderData();
+  setSyncStatus('ok');
+
+  // Load from Firebase if URL exists
+  if (appData.firebaseUrl) {
+    loadFromFirebase();
+  }
+}
+
+
+// ========================================
+// 🔥 FIREBASE SYNC
+// ========================================
+function saveToFirebase() {
+  if (!appData.firebaseUrl) return;
+
+  const url = appData.firebaseUrl + '/targetDashboard.json';
+  console.log('🔥 Firebase ga saqlanmoqda:', url);
+
+  fetch(url, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      items: appData.items,
+      lastUpdated: new Date().toISOString()
+    })
+  })
+  .then(res => {
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return res.json();
+  })
+  .then(() => {
+    console.log('✅ Firebase ga saqlandi');
+    setSyncStatus('ok');
+    showToast('✅ Firebase ga saqlandi');
+  })
+  .catch(err => {
+    console.error('❌ Firebase save xato:', err);
+    setSyncStatus('ok');
+    showToast('⚠ Firebase xato (localStorage ishlayapti)', true);
+  });
+}
+
+function loadFromFirebase() {
+  if (!appData.firebaseUrl) return;
+
+  const url = appData.firebaseUrl + '/targetDashboard.json';
+  console.log('🔥 Firebase dan yuklanmoqda:', url);
+  setSyncStatus('loading');
+
+  fetch(url)
+    .then(res => {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.json();
+    })
+    .then(data => {
+      if (data && data.items) {
+        appData.items = data.items;
+        localStorage.setItem('td-data', JSON.stringify(appData));
+        console.log('✅ Firebase dan yuklandi:', data.items.length, 'items');
+        renderData();
+        showToast('✅ Firebase dan yangilandi');
+      } else {
+        console.log('ℹ Firebase bo\'sh, localStorage ishlatilmoqda');
+      }
+      setSyncStatus('ok');
+    })
+    .catch(err => {
+      console.error('❌ Firebase load xato:', err);
+      setSyncStatus('ok');
+    });
+}
+
+function saveFirebase() {
+  const url = document.getElementById('fb-url').value.trim();
+  
+  if (!url) {
+    alert('⚠ Firebase URL ni kiriting!');
+    return;
+  }
+
+  // Validate URL
+  if (!url.includes('firebaseio.com') && !url.includes('firebasedatabase.app')) {
+    alert('⚠ Noto\'g\'ri Firebase URL!\n\nTo\'g\'ri format:\nhttps://project-id-default-rtdb.firebaseio.com');
+    return;
+  }
+
+  appData.firebaseUrl = url;
+  localStorage.setItem('td-data', JSON.stringify(appData));
+  
+  console.log('✅ Firebase URL saqlandi:', url);
+  showToast('🔄 Firebase test qilinyapti...');
+
+  // Test connection
+  saveToFirebase();
+  setTimeout(() => {
+    loadFromFirebase();
+    closeFirebaseModal();
+    
+    // Start auto-sync every 30 seconds
+    if (syncTimer) clearInterval(syncTimer);
+    syncTimer = setInterval(() => {
+      console.log('🔄 Avtomatik sinxronlash...');
+      loadFromFirebase();
+    }, 30000);
+  }, 1000);
+}
+
+
+// ========================================
+// 📤 EXPORT & 📥 IMPORT
+// ========================================
+function exportData() {
+  const dataStr = JSON.stringify(appData, null, 2);
+  const blob = new Blob([dataStr], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const date = new Date().toISOString().split('T')[0];
+  a.href = url;
+  a.download = `target-dashboard-${date}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  
+  console.log('📤 Eksport qilindi');
+  showToast('📤 Fayl yuklandi!');
+}
+
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const imported = JSON.parse(e.target.result);
+      
+      // Validate structure
+      if (!imported.items || !Array.isArray(imported.items)) {
+        alert('⚠ Noto\'g\'ri fayl formati!');
+        return;
+      }
+
+      // Merge or replace
+      const action = confirm(
+        `📥 ${imported.items.length} ta yozuv topildi.\n\n` +
+        `OK = Qo'shish (${appData.items.length + imported.items.length} ta bo'ladi)\n` +
+        `Cancel = Almashtirish (faqat ${imported.items.length} ta qoladi)`
+      );
+
+      if (action) {
+        // Add to existing
+        appData.items = [...appData.items, ...imported.items];
+      } else {
+        // Replace
+        appData = imported;
+      }
+
+      saveData();
+      renderData();
+      console.log('📥 Import qilindi:', imported.items.length, 'items');
+      showToast('✅ Import muvaffaqiyatli!');
+
+      // Auto-sync to Firebase if connected
+      if (appData.firebaseUrl) {
+        setTimeout(() => saveToFirebase(), 500);
+      }
+    } catch (err) {
+      console.error('❌ Import xato:', err);
+      alert('⚠ Fayl o\'qishda xato!');
+    }
+  };
+  reader.readAsText(file);
+
+  // Reset input
+  event.target.value = '';
+}
+
+// ========================================
+// 🚀 INIT
+// ========================================
+console.log('🚀 Target Dashboard ishga tushdi');
+console.log('📦 Version: 2.0 - Firebase Auto Sync');
+
+// Load data on start
+loadData();
+
+// Auto-save every 2 minutes (backup)
+setInterval(() => {
+  console.log('💾 Auto-backup...');
+  saveData();
+}, 120000);
+
+console.log('✅ Ready! Demo ma\'lumotlar mavjud.');
+console.log('💡 Firebase ulash: 🔥 Firebase tugmasini bosing');
+</script>
+</body>
+</html>
